@@ -5,12 +5,14 @@ import { v4 as uuidv4 } from "uuid";
 // --- Types ---
 type FieldType = "radio" | "text" | "checkbox" | "textarea" | "select" | "numeric";
 
+// --- Types (Update Field Interface) ---
 interface Field {
   id: string;
   type: FieldType;
   label: string;
   value: string;
   mandatory?: boolean;
+  errorMessage?: string;
   placeholder?: string;
   maxChars?: number;
   icon?: string;
@@ -44,7 +46,7 @@ const CheckboxInput = styled.input`margin-right: 6px;`;
 const Button = styled.button`margin-top: 10px; padding: 6px 12px; background: #eee; border: 1px solid #ccc; cursor: pointer; margin-right: 8px;`;
 const FieldContainer = styled.div<{ level: number }>`margin-left: ${(p) => p.level * 20}px; padding: 12px 0; border-left: 2px solid #ccc; padding-left: 10px;`;
 const PreviewBlock = styled.div`background: #fff; padding: 16px; margin-bottom: 16px; border-radius: 6px; box-shadow: 0 0 5px rgba(0,0,0,0.1);`;
-const PreviewLabel = styled.label<{ mandatory?: boolean }>`font-weight: bold; display: block; margin-bottom: 4px; color: ${(p) => (p.mandatory ? "red" : "#000")};`;
+const PreviewLabel = styled.label`font-weight: bold; display: block; margin-bottom: 4px;`;
 const HelperText = styled.div`font-size: 12px; color: #666; margin-bottom: 8px;`;
 
 // --- Helpers ---
@@ -73,6 +75,9 @@ const FormBuilder: React.FC = () => {
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [checkedOptions, setCheckedOptions] = useState<Record<string, boolean>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const renderFieldEditor = (
     field: Field,
@@ -135,45 +140,95 @@ const FormBuilder: React.FC = () => {
           )}
         </SelectInput>
 
-        <label>
-          <CheckboxInput
-            type="checkbox"
-            checked={field.mandatory}
-            onChange={() => onChange({ ...field, mandatory: !field.mandatory })}
-          />
-          Mandatory
-        </label>
-
-        {(field.type === "text" || field.type === "numeric") && (
+        {level > 0 && (
           <>
-            <InputLabel>Icon</InputLabel>
-            <TextInput
-              value={field.icon || ""}
-              onChange={(e) => {
-                const newIcon = e.target.value;
-                onChange({
-                  ...field,
-                  icon: newIcon,
-                  iconAlignment: newIcon ? (field.iconAlignment || "left") : undefined,
-                });
-              }}
-              placeholder="e.g. 🔍"
-            />
-            {field.icon && (
+            <label>
+              <CheckboxInput
+                type="checkbox"
+                checked={field.mandatory || false}
+                onChange={() =>
+                  onChange({
+                    ...field,
+                    mandatory: !field.mandatory,
+                    errorMessage: !field.mandatory ? field.errorMessage ?? "This field is required." : undefined,
+                  })
+                }
+              />
+              Mandatory
+            </label>
+
+            {field.mandatory && (
               <>
-                <InputLabel>Icon Alignment</InputLabel>
-                <SelectInput
-                  value={field.iconAlignment || "left"}
+                <InputLabel>Error Message</InputLabel>
+                <TextInput
+                  value={field.errorMessage || ""}
                   onChange={(e) =>
                     onChange({
                       ...field,
-                      iconAlignment: e.target.value as "left" | "right",
+                      errorMessage: e.target.value,
                     })
                   }
-                >
-                  <option value="left">Left</option>
-                  <option value="right">Right</option>
-                </SelectInput>
+                  placeholder="Enter error message to show in preview"
+                />
+              </>
+            )}
+          </>
+        )}
+
+        {(field.type === "text" || field.type === "numeric" || field.type === "textarea") && (
+          <>
+            {/* Icon settings only for text/numeric */}
+            {(field.type === "text" || field.type === "numeric") && (
+              <>
+                <InputLabel>Icon</InputLabel>
+                <TextInput
+                  value={field.icon || ""}
+                  onChange={(e) => {
+                    const newIcon = e.target.value;
+                    onChange({
+                      ...field,
+                      icon: newIcon,
+                      iconAlignment: newIcon ? (field.iconAlignment || "left") : undefined,
+                    });
+                  }}
+                  placeholder="e.g. 🔍"
+                />
+                {field.icon && (
+                  <>
+                    <InputLabel>Icon Alignment</InputLabel>
+                    <SelectInput
+                      value={field.iconAlignment || "left"}
+                      onChange={(e) =>
+                        onChange({
+                          ...field,
+                          iconAlignment: e.target.value as "left" | "right",
+                        })
+                      }
+                    >
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                    </SelectInput>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Max Chars for textarea */}
+            {field.type === "textarea" && (
+              <>
+                <InputLabel>Max Characters</InputLabel>
+                <TextInput
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 200"
+                  value={field.maxChars ?? ""}
+                  onChange={(e) =>
+                    onChange({
+                      ...field,
+                      maxChars: e.target.value ? parseInt(e.target.value) : undefined,
+                    })
+                  }
+                />
               </>
             )}
           </>
@@ -251,12 +306,13 @@ const FormBuilder: React.FC = () => {
   };
 
   const renderPreview = (field: Field, level = 0): React.ReactNode => {
+    const inheritedMandatory = field.mandatory ?? false;
     // --- Radio Field ---
     if (level === 0 && field.type === "radio") {
       return (
         <>
           <PreviewBlock>
-            <PreviewLabel mandatory={field.mandatory}>{field.label}</PreviewLabel>
+            <PreviewLabel>{field.label}</PreviewLabel>
             {(field.options || []).map((opt) => (
               <div key={opt.id}>
                 <label>
@@ -265,7 +321,7 @@ const FormBuilder: React.FC = () => {
                     name={field.id}
                     value={opt.value}
                     checked={selectedOptions[field.id] === opt.id}
-                    onChange={() =>
+                    onChange={() => 
                       setSelectedOptions((prev) => ({
                         ...prev,
                         [field.id]: opt.id,
@@ -284,7 +340,7 @@ const FormBuilder: React.FC = () => {
             if (selectedOptions[field.id] === opt.id && opt.children) {
               return opt.children.map((child) => (
                 <PreviewBlock key={child.id}>
-                  {renderPreview(child, level + 1)}
+                  {renderPreview({ ...child, mandatory: child.mandatory ?? field.mandatory }, level + 1)}
                 </PreviewBlock>
               ));
             }
@@ -298,66 +354,133 @@ const FormBuilder: React.FC = () => {
     return (
       <FieldContainer level={level}>
         {field.label && (
-          <PreviewLabel mandatory={field.mandatory}>{field.label}</PreviewLabel>
+          <PreviewLabel>{field.label}</PreviewLabel>
         )}
 
+        {/* Text & Textarea */}
         {(field.type === "text" || field.type === "textarea") && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {field.icon && field.iconAlignment === "left" && (
-              <span style={{ fontSize: 18 }}>{field.icon}</span>
-            )}
-            {field.type === "text" ? (
-              <input placeholder={field.placeholder} maxLength={field.maxChars} />
-            ) : (
-              <textarea placeholder={field.placeholder} maxLength={field.maxChars} />
-            )}
-            {field.icon && field.iconAlignment === "right" && (
-              <span style={{ fontSize: 18 }}>{field.icon}</span>
-            )}
-          </div>
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {field.icon && field.iconAlignment === "left" && (
+                <span style={{ fontSize: 18 }}>{field.icon}</span>
+              )}
+              {field.type === "text" ? (
+                <>
+                  <input
+                    placeholder={field.placeholder}
+                    maxLength={field.maxChars}
+                    value={fieldValues[field.id] || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFieldValues((prev) => ({ ...prev, [field.id]: value }));
+                      setTouchedFields((prev) => ({ ...prev, [field.id]: true }));
+                      setFieldValues((prev) => ({
+                        ...prev,
+                        [field.id]: e.target.value,
+                      }))
+                    }}
+                  />
+                  {isSubmitted && inheritedMandatory && !fieldValues[field.id] && !touchedFields[field.id] && field.errorMessage && (
+                    <HelperText style={{ color: "red" }}>{field.errorMessage}</HelperText>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div style={{ position: "relative" }}>
+                    <textarea
+                      placeholder={field.placeholder}
+                      maxLength={field.maxChars}
+                      value={fieldValues[field.id] || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (!field.maxChars || value.length <= field.maxChars) {
+                          setFieldValues((prev) => ({ ...prev, [field.id]: value }));
+                          setTouchedFields((prev) => ({ ...prev, [field.id]: true }));
+                        }
+                      }}
+                      style={{ width: "100%", minHeight: 100, paddingBottom: 20 }}
+                    />
+                    {field.maxChars && (
+                      <div style={{
+                        position: "absolute",
+                        bottom: 4,
+                        right: 8,
+                        fontSize: 12,
+                        color: "#666"
+                      }}>
+                        {(fieldValues[field.id]?.length || 0)} / {field.maxChars}
+                      </div>
+                    )}
+                  </div>
+                  {isSubmitted && inheritedMandatory && !fieldValues[field.id] && !touchedFields[field.id] && field.errorMessage && (
+                    <HelperText style={{ color: "red" }}>{field.errorMessage}</HelperText>
+                  )}
+                </>
+              )}
+              {field.icon && field.iconAlignment === "right" && (
+                <span style={{ fontSize: 18 }}>{field.icon}</span>
+              )}
+            </div>
+          </>
         )}
 
+        {/* Numeric */}
         {field.type === "numeric" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {field.icon && field.iconAlignment === "left" && (
-              <span style={{ fontSize: 18 }}>{field.icon}</span>
-            )}
+          <>
             <input
+              inputMode="decimal"
               placeholder={field.placeholder}
-              onInput={(e) => {
-                const target = e.target as HTMLInputElement;
-                const value = target.value;
-                const decimalPoints = field.decimalPoints ?? 0;
-
+              value={fieldValues[field.id] || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                const dp = field.decimalPoints ?? 0;
                 const regexMap: Record<number, RegExp> = {
                   0: /^\d*$/,
                   1: /^\d*(\.\d{0,1})?$/,
                   2: /^\d*(\.\d{0,2})?$/,
                 };
-
-                const regex = regexMap[decimalPoints];
-                if (!regex.test(value)) {
-                  target.value = value.slice(0, -1);
+                if (regexMap[dp].test(value)) {
+                  setFieldValues((prev) => ({ ...prev, [field.id]: value }));
                 }
+                setFieldValues((prev) => ({ ...prev, [field.id]: value }));
+                setTouchedFields((prev) => ({ ...prev, [field.id]: true }));
               }}
-              inputMode="decimal"
             />
-            {field.icon && field.iconAlignment === "right" && (
-              <span style={{ fontSize: 18 }}>{field.icon}</span>
+            {isSubmitted && inheritedMandatory && !fieldValues[field.id] && !touchedFields[field.id] && field.errorMessage && (
+              <HelperText style={{ color: "red" }}>{field.errorMessage}</HelperText>
             )}
-          </div>
+          </>
         )}
 
+        {/* Select */}
         {field.type === "select" && (
-          <select>
-            {(field.options || []).map((opt) => (
-              <option key={opt.id} value={opt.value}>
-                {opt.value}
-              </option>
-            ))}
-          </select>
+          <>
+            <select
+              value={fieldValues[field.id] || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFieldValues((prev) => ({
+                  ...prev,
+                  [field.id]: value,
+                }))
+                setFieldValues((prev) => ({ ...prev, [field.id]: value }));
+                setTouchedFields((prev) => ({ ...prev, [field.id]: true }));
+              }}
+            >
+              <option value="">-- Select --</option>
+              {(field.options || []).map((opt) => (
+                <option key={opt.id} value={opt.value}>
+                  {opt.value}
+                </option>
+              ))}
+            </select>
+            {isSubmitted && inheritedMandatory && !fieldValues[field.id] && !touchedFields[field.id] && field.errorMessage && (
+              <HelperText style={{ color: "red" }}>{field.errorMessage}</HelperText>
+            )}
+          </>        
         )}
 
+        {/* Checkbox */}
         {field.type === "checkbox" && (
           <>
             {(field.options || []).map((opt) => (
@@ -368,28 +491,39 @@ const FormBuilder: React.FC = () => {
                     name={field.id}
                     value={opt.value}
                     checked={!!checkedOptions[opt.id]}
-                    onChange={() =>
+                    onChange={(e) => {
                       setCheckedOptions((prev) => ({
                         ...prev,
                         [opt.id]: !prev[opt.id],
                       }))
-                    }
+                      const value = e.target.value;
+                      setFieldValues((prev) => ({ ...prev, [field.id]: value }));
+                      setTouchedFields((prev) => ({ ...prev, [field.id]: true }));
+                    }}
                   />{" "}
                   {opt.value}
                 </label>
-                {/* Render children of checked checkbox */}
+
                 {checkedOptions[opt.id] &&
                   opt.children?.map((child) => (
                     <PreviewBlock key={child.id}>
-                      {renderPreview(child, level + 1)}
+                      {renderPreview({ ...child, mandatory: child.mandatory ?? inheritedMandatory }, level + 1)}
                     </PreviewBlock>
                   ))}
               </div>
             ))}
+            {
+              isSubmitted &&
+              inheritedMandatory &&
+              !touchedFields[field.id] &&
+              !(field.options || []).some((opt) => checkedOptions[opt.id]) &&
+              field.errorMessage && (
+                <HelperText style={{ color: "red" }}>{field.errorMessage}</HelperText>
+            )}
           </>
         )}
 
-        {/* Nested radios (not root level) */}
+        {/* Nested Radio */}
         {field.type === "radio" && level > 0 && (
           <>
             {(field.options || []).map((opt) => (
@@ -400,12 +534,15 @@ const FormBuilder: React.FC = () => {
                     name={field.id}
                     value={opt.value}
                     checked={selectedOptions[field.id] === opt.id}
-                    onChange={() =>
+                    onChange={(e) => {
                       setSelectedOptions((prev) => ({
                         ...prev,
                         [field.id]: opt.id,
                       }))
-                    }
+                      const value = e.target.value;
+                      setFieldValues((prev) => ({ ...prev, [field.id]: value }));
+                      setTouchedFields((prev) => ({ ...prev, [field.id]: true }));
+                    }}
                   />{" "}
                   {opt.value}
                 </label>
@@ -413,11 +550,15 @@ const FormBuilder: React.FC = () => {
                 {selectedOptions[field.id] === opt.id &&
                   opt.children?.map((child) => (
                     <PreviewBlock key={child.id}>
-                      {renderPreview(child, level + 1)}
+                      {renderPreview({ ...child, mandatory: child.mandatory ?? inheritedMandatory }, level + 1)}
                     </PreviewBlock>
                   ))}
               </div>
             ))}
+            {
+              isSubmitted && inheritedMandatory && !selectedOptions[field.id] && !touchedFields[field.id] && field.errorMessage && (
+                <HelperText style={{ color: "red" }}>{field.errorMessage}</HelperText>
+              )}
           </>
         )}
       </FieldContainer>
@@ -438,6 +579,7 @@ const FormBuilder: React.FC = () => {
       <PreviewPanel>
         <SectionTitle>{block.blockTitle}</SectionTitle>
         {renderPreview(block.field)}
+        <Button onClick={() => setIsSubmitted(true)}>Submit</Button>
         <SectionTitle>JSON Output</SectionTitle>
         <pre>{JSON.stringify(block, null, 2)}</pre>
       </PreviewPanel>
