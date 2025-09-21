@@ -169,16 +169,21 @@ export const BlockWrapper = styled.div<{ level?: number; separate?: boolean }>`
   padding: 16px;
   margin-bottom: 16px;
   border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  border-left: ${(p) => (p.level && p.level > 0 ? "2px solid #ccc" : "none")};
-  margin-left: ${(p) => (p.level && p.level > 0 ? `${p.level * 20}px` : "0")};
+  
+  /* Only show box-shadow on level 0 (parent) and level 1 (separate child blocks) */
+  box-shadow: ${(p) => 
+    (p.level === 0 || (p.level === 1 && p.separate)) 
+      ? '0 2px 5px rgba(0,0,0,0.1)' 
+      : 'none'
+  };
 
   ${(p) =>
     p.separate &&
     css`
-      background: #f9f9f9;
-      border: 2px dashed #aaa;
-      box-shadow: none;
-      margin-top: 12px;
+      /* Separate blocks should look like the parent block, not dashed */
+      background: #fff;
+      border: none;
+      margin-top: 16px;
+      /* Keep the same styling as parent block */
     `}
 `;

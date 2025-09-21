@@ -93,21 +93,17 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
             onChange={(e) => onChange({ ...field, placeholder: e.target.value })}
           />
 
-          {field.type !== "numeric" && (
-            <>
-              <InputLabel>Icon</InputLabel>
-              <TextInput value={field.icon || ""} onChange={(e) => onChange({ ...field, icon: e.target.value })} />
+          <InputLabel>Icon</InputLabel>
+          <TextInput value={field.icon || ""} onChange={(e) => onChange({ ...field, icon: e.target.value })} />
 
-              <InputLabel>Icon Alignment</InputLabel>
-              <SelectInput
-                value={field.iconAlignment || "left"}
-                onChange={(e) => onChange({ ...field, iconAlignment: e.target.value as "left" | "right" })}
-              >
-                <option value="left">Left</option>
-                <option value="right">Right</option>
-              </SelectInput>
-            </>
-          )}
+          <InputLabel>Icon Alignment</InputLabel>
+          <SelectInput
+            value={field.iconAlignment || "left"}
+            onChange={(e) => onChange({ ...field, iconAlignment: e.target.value as "left" | "right" })}
+          >
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+          </SelectInput>
 
           {field.type === "textarea" && (
             <>
@@ -149,11 +145,14 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
                   onChange={(e) => updateOption(opt.id, (o) => ({ ...o, value: e.target.value }))}
                 />
 
-                <TextInput
-                  placeholder="Helper Text"
-                  value={opt.helperText || ""}
-                  onChange={(e) => updateOption(opt.id, (o) => ({ ...o, helperText: e.target.value }))}
-                />
+                {/* Only show helper text input for top-level elements */}
+                {level === 0 && (
+                  <TextInput
+                    placeholder="Helper Text"
+                    value={opt.helperText || ""}
+                    onChange={(e) => updateOption(opt.id, (o) => ({ ...o, helperText: e.target.value }))}
+                  />
+                )}
 
                 <RemoveButton
                   type="button"
@@ -167,6 +166,20 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
                 <Button type="button" onClick={() => addChildField(opt.id)}>
                   Add Child Field
                 </Button>
+                
+                {/* Show placement option if this option has children */}
+                {(opt.children || []).length > 0 && (
+                  <>
+                    <InputLabel>Children Layout</InputLabel>
+                    <SelectInput
+                      value={opt.placement || "column"}
+                      onChange={(e) => updateOption(opt.id, (o) => ({ ...o, placement: e.target.value as "row" | "column" }))}
+                    >
+                      <option value="column">Column</option>
+                      <option value="row">Row</option>
+                    </SelectInput>
+                  </>
+                )}
               </OptionActions>
 
               {(opt.children || []).map((child, childIdx) => (

@@ -1,6 +1,6 @@
 import React from "react";
 import type { Field, Block } from "../types";
-import { ErrorHelper } from "../../../assets/Main.styled";
+import { ErrorHelper, FlexRow, SmallIcon } from "../../../assets/Main.styled";
 
 interface Props {
   field: Field;
@@ -29,7 +29,8 @@ const NumericFieldPreview: React.FC<Props> = ({
   };
 
   return (
-    <>
+    <FlexRow>
+      {field.icon && field.iconAlignment === "left" && <SmallIcon>{field.icon}</SmallIcon>}
       <input
         inputMode="decimal"
         placeholder={field.placeholder}
@@ -42,8 +43,9 @@ const NumericFieldPreview: React.FC<Props> = ({
           }
         }}
       />
+      {field.icon && field.iconAlignment === "right" && <SmallIcon>{field.icon}</SmallIcon>}
       {error && <ErrorHelper>{error}</ErrorHelper>}
-    </>
+    </FlexRow>
   );
 };
 

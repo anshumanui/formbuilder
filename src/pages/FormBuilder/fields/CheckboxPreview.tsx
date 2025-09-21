@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import type { Field, Block, Option } from "../types";
 import PreviewRenderer from "../PreviewRenderer";
 import {
@@ -22,6 +22,7 @@ interface Props {
   setSelectedOptions: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setFieldValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   error?: string | null;
+  renderChildrenInParent?: boolean;
 }
 
 const CheckboxPreview: React.FC<Props> = ({
@@ -38,6 +39,7 @@ const CheckboxPreview: React.FC<Props> = ({
   setSelectedOptions,
   setFieldValues,
   error,
+  renderChildrenInParent = false,
 }) => {
   return (
     <>
@@ -63,7 +65,9 @@ const CheckboxPreview: React.FC<Props> = ({
               {opt.value}
             </label>
 
-            {isChecked && (opt.children?.length ?? 0) > 0 && (
+            {/* Only render children inline if NOT renderChildrenInParent */}
+            {!renderChildrenInParent &&
+              isChecked && (opt.children?.length ?? 0) > 0 && (
               <ChildrenContainer placement={opt.placement || "column"}>
                 {opt.children!.map((child) => (
                   <OptionContainer key={child.id}>
@@ -93,6 +97,5 @@ const CheckboxPreview: React.FC<Props> = ({
     </>
   );
 };
-
 
 export default CheckboxPreview;

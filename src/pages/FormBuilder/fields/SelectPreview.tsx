@@ -18,6 +18,7 @@ interface Props {
   setSelectedOptions: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setCheckedOptions: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   error?: string | null;
+  renderChildrenInParent?: boolean;
 }
 
 const SelectPreview: React.FC<Props> = ({
@@ -35,6 +36,7 @@ const SelectPreview: React.FC<Props> = ({
   setSelectedOptions,
   setCheckedOptions,
   error,
+  renderChildrenInParent = false,
 }) => {
   const value = fieldValues[field.id] || "";
   const selectedOpt = (field.options || []).find((opt) => opt.value === value);
@@ -58,7 +60,9 @@ const SelectPreview: React.FC<Props> = ({
 
       {error && <ErrorHelper>{error}</ErrorHelper>}
 
-      {value && (selectedOpt?.children ?? []).length > 0 && (
+      {/* Only render children inline if NOT renderChildrenInParent */}
+      {!renderChildrenInParent &&
+        value && (selectedOpt?.children ?? []).length > 0 && (
         <ChildrenContainer placement={selectedOpt?.placement || "column"}>
           {(selectedOpt?.children ?? []).map((child) => (
             <BlockWrapper key={child.id} level={level + 1}>

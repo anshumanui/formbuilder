@@ -18,6 +18,7 @@ interface Props {
   setCheckedOptions: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   setFieldValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   error?: string | null;
+  renderChildrenInParent?: boolean;
 }
 
 const RadioPreview: React.FC<Props> = ({
@@ -35,6 +36,7 @@ const RadioPreview: React.FC<Props> = ({
   setCheckedOptions,
   setFieldValues,
   error,
+  renderChildrenInParent = false,
 }) => (
   <>
     {(field.options || []).map((opt) => {
@@ -56,9 +58,11 @@ const RadioPreview: React.FC<Props> = ({
             {opt.value}
           </label>
 
-          {opt.helperText && <HelperText>{opt.helperText}</HelperText>}
+          {opt.helperText && level === 0 && <HelperText>{opt.helperText}</HelperText>}
 
-          {selectedOptions[field.id] === opt.id &&
+          {/* Only render children inline if NOT renderChildrenInParent */}
+          {!renderChildrenInParent &&
+            selectedOptions[field.id] === opt.id &&
             (opt.children ?? []).length > 0 && (
                 <ChildrenContainer placement={opt.placement || "column"}>
                 {(opt.children ?? []).map((child) => (
