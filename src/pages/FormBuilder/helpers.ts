@@ -8,7 +8,7 @@ export const createEmptyField = (): Field => ({
   type: "text",
   label: "",
   key: "",
-  value: "",
+  value: ""
 });
 
 export const generateKeyFromLabel = (label: string): string => {
@@ -193,4 +193,102 @@ export const collectAllFields = (
   }
   
   return result;
+};
+
+// Generate user response JSON mapped to keys
+export const generateUserResponseJSON = (
+  block: Block,
+  selectedOptions: Record<string, string>,
+  checkedOptions: Record<string, boolean>,
+  fieldValues: Record<string, string>
+): any => {
+  
+  const buildFieldResponse = (field: Field): any => {
+    const response: any = {};
+    
+    if (field.type === "radio") {
+      const selectedOptionId = selectedOptions[field.id];
+      const selectedOption = field.options?.find(opt => opt.id === selectedOptionId);
+      
+      if (selectedOption) {
+        response[selectedOption.key] = {
+          selected: true
+        };
+        
+        // Add children responses if any
+        if (selectedOption.children && selectedOption.children.length > 0) {
+          selectedOption.children.forEach(child => {
+            const childResponse = buildFieldResponse(child);
+            if (Object.keys(childResponse).length > 0) {
+              Object.assign(response[selectedOption.key], childResponse);
+            }
+          });
+        }
+      }
+    }
+    
+    else if (field.type === "checkbox") {
+      const checkboxResponse: any = {};
+      
+      field.options?.forEach(option => {
+        const isChecked = checkedOptions[option.id];
+        if (isChecked) {
+          checkboxResponse[option.key] = {
+            selected: true
+          };
+          
+          // Add children responses if any
+          if (option.children && option.children.length > 0) {
+            option.children.forEach(child => {
+              const childResponse = buildFieldResponse(child);
+              if (Object.keys(childResponse).length > 0) {
+                Object.assign(checkboxResponse[option.key], childResponse);
+              }
+            });
+          }
+        }
+      });
+      
+      if (Object.keys(checkboxResponse).length > 0) {
+        response[field.key] = checkboxResponse;
+      }
+    }
+    
+    else if (field.type === "select") {
+      const selectedValue = fieldValues[field.id];
+      const selectedOption = field.options?.find(opt => opt.key === selectedValue);
+      
+      if (selectedOption) {
+        response[selectedOption.key] = {
+          selected: true
+        };
+        
+        // Add children responses if any
+        if (selectedOption.children && selectedOption.children.length > 0) {
+          selectedOption.children.forEach(child => {
+            const childResponse = buildFieldResponse(child);
+            if (Object.keys(childResponse).length > 0) {
+              Object.assign(response[selectedOption.key], childResponse);
+            }
+          });
+        }
+      }
+    }
+    
+    else if (field.type === "text" || field.type === "textarea" || field.type === "numeric") {
+      const value = fieldValues[field.id];
+      if (value && value.trim() !== "") {
+        response[field.key] = value;
+      }
+    }
+    
+    return response;
+  };
+  
+  // Start with the root field
+  const rootResponse = buildFieldResponse(block.field);
+  
+  return {
+    [block.field.key]: rootResponse
+  };
 };

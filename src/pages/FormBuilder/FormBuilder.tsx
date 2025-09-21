@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { Block } from "./types";
-import { idGenerator, generateKeyFromLabel, cleanBlockForExport, createEmptyField } from "./helpers";
-import { FORM_CONFIG } from "./config";
+import { idGenerator, generateKeyFromLabel, cleanBlockForExport, generateUserResponseJSON } from "./helpers";
 import FieldEditor from "./FieldEditor";
 import PreviewRenderer from "./PreviewRenderer";
 import { Container, BuilderPanel, PreviewPanel, SectionTitle, Button } from "../../assets/Main.styled";
@@ -28,6 +27,18 @@ const FormBuilder: React.FC = () => {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [clearedFields, setClearedFields] = useState<Record<string, boolean>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [userResponseJSON, setUserResponseJSON] = useState<any>({});
+
+  // Update user response JSON whenever form state changes
+  useEffect(() => {
+    const response = generateUserResponseJSON(
+      block,
+      selectedOptions,
+      checkedOptions,
+      fieldValues
+    );
+    setUserResponseJSON(response);
+  }, [block, selectedOptions, checkedOptions, fieldValues]);
 
   // Initialize selected option for top-level radio
   useEffect(() => {
@@ -51,6 +62,16 @@ const FormBuilder: React.FC = () => {
     setIsSubmitted(true);
     // Reset cleared fields to show errors for all required fields
     setClearedFields({});
+    
+    // Generate user response JSON
+    const userResponse = generateUserResponseJSON(
+      block,
+      selectedOptions,
+      checkedOptions,
+      fieldValues
+    );
+    
+    console.log("User Response JSON:", userResponse);
   };
 
   const handleReset = () => {
@@ -59,6 +80,7 @@ const FormBuilder: React.FC = () => {
     setSelectedOptions({});
     setCheckedOptions({});
     setFieldValues({});
+    setUserResponseJSON({});
   };
 
   return (
@@ -99,8 +121,15 @@ const FormBuilder: React.FC = () => {
           </Button>
         </div>
 
-        <SectionTitle>JSON Output</SectionTitle>
-        <pre>{JSON.stringify(cleanBlockForExport(block), null, 2)}</pre>
+        <SectionTitle>Form Structure JSON</SectionTitle>
+        <pre style={{ fontSize: '12px', maxHeight: '300px', overflow: 'auto' }}>
+          {JSON.stringify(cleanBlockForExport(block), null, 2)}
+        </pre>
+
+        <SectionTitle>User Response JSON</SectionTitle>
+        <pre style={{ fontSize: '12px', maxHeight: '300px', overflow: 'auto' }}>
+          {JSON.stringify(userResponseJSON, null, 2)}
+        </pre>
       </PreviewPanel>
     </Container>
   );
