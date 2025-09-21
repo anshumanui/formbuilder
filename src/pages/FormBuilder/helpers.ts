@@ -292,3 +292,93 @@ export const generateUserResponseJSON = (
     [block.field.key]: rootResponse
   };
 };
+
+// Map user response JSON to form state
+export const mapUserResponseToFormState = (
+  block: Block,
+  userResponse: any
+): {
+  selectedOptions: Record<string, string>;
+  checkedOptions: Record<string, boolean>;
+  fieldValues: Record<string, string>;
+} => {
+  const selectedOptions: Record<string, string> = {};
+  const checkedOptions: Record<string, boolean> = {};
+  const fieldValues: Record<string, string> = {};
+
+  const processFieldResponse = (field: Field, response: any) => {
+    if (!response) return;
+
+    if (field.type === "radio") {
+      // Find which option was selected
+      field.options?.forEach(option => {
+        const optionResponse = response[option.key];
+        if (optionResponse && optionResponse.selected) {
+          selectedOptions[field.id] = option.id;
+          
+          // Process children if any
+          if (option.children) {
+            option.children.forEach(child => {
+              processFieldResponse(child, optionResponse);
+            });
+          }
+        }
+      });
+    }
+    
+    else if (field.type === "checkbox") {
+      const checkboxResponse = response[field.key];
+      if (checkboxResponse) {
+        field.options?.forEach(option => {
+          const optionResponse = checkboxResponse[option.key];
+          if (optionResponse && optionResponse.selected) {
+            checkedOptions[option.id] = true;
+            
+            // Process children if any
+            if (option.children) {
+              option.children.forEach(child => {
+                processFieldResponse(child, optionResponse);
+              });
+            }
+          }
+        });
+      }
+    }
+    
+    else if (field.type === "select") {
+      // Find which option was selected
+      field.options?.forEach(option => {
+        const optionResponse = response[option.key];
+        if (optionResponse && optionResponse.selected) {
+          fieldValues[field.id] = option.key;
+          
+          // Process children if any
+          if (option.children) {
+            option.children.forEach(child => {
+              processFieldResponse(child, optionResponse);
+            });
+          }
+        }
+      });
+    }
+    
+    else if (field.type === "text" || field.type === "textarea" || field.type === "numeric") {
+      const value = response[field.key];
+      if (value && typeof value === "string") {
+        fieldValues[field.id] = value;
+      }
+    }
+  };
+
+  // Start processing from the root field
+  const rootResponse = userResponse[block.field.key];
+  if (rootResponse) {
+    processFieldResponse(block.field, rootResponse);
+  }
+
+  return {
+    selectedOptions,
+    checkedOptions,
+    fieldValues
+  };
+};
