@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const Main = styled.main`
   padding: 20px;
@@ -63,11 +63,17 @@ export const Button = styled.button`
   margin-right: 8px;
 `;
 
-export const FieldContainer = styled.div<{ level: number }>`
-  margin-left: ${(p) => (p.level === 0 ? 0 : 0)};
+export const FieldContainer = styled.div<{ level: number; separate?: boolean }>`
+  margin-left: ${(p) => (p.level === 0 ? 0 : 20 * p.level)}px;
   padding: 12px 0;
   border-left: ${(p) => (p.level === 0 ? '2px solid #ccc' : 'none')};
   padding-left: ${(p) => (p.level === 0 ? '10px' : '0')};
+  ${(p) => p.separate && `
+    border: 1px solid #aaa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  `}
 `;
 
 export const PreviewBlock = styled.div<{ level?: number }>`
@@ -156,4 +162,23 @@ export const RemoveButton = styled(Button)`
   background: #fdd;
   border-color: #d00;
   color: #900;
+`;
+
+export const BlockWrapper = styled.div<{ level?: number; separate?: boolean }>`
+  background: #fff;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-left: ${(p) => (p.level && p.level > 0 ? "2px solid #ccc" : "none")};
+  margin-left: ${(p) => (p.level && p.level > 0 ? `${p.level * 20}px` : "0")};
+
+  ${(p) =>
+    p.separate &&
+    css`
+      background: #f9f9f9;
+      border: 2px dashed #aaa;
+      box-shadow: none;
+      margin-top: 12px;
+    `}
 `;

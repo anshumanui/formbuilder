@@ -295,6 +295,17 @@ const renderFieldEditor = (
         field.type === "numeric" ||
         field.type === "textarea") && (
         <>
+          <InputLabel>Placeholder</InputLabel>
+          <TextInput
+            value={field.placeholder || ""}
+            onChange={(e) =>
+              onChange({
+                ...field,
+                placeholder: e.target.value,
+              })
+            }
+            placeholder="Enter placeholder text"
+          />
           {(field.type === "text" || field.type === "numeric") && (
             <>
               <InputLabel>Icon</InputLabel>
@@ -511,7 +522,7 @@ const FormBuilder: React.FC = () => {
     const inheritedMandatory = field.mandatory ?? false;
     const error = getErrorForField(field, parentSelected, isSubmitted, fieldValues, clearedFields);
 
-    const childrenLayout = (children: Field[], placement: "row" | "column", level: number) => {
+    const childrenLayout = (children: Field[], placement: "row" | "column", level: number, childParentSelected: boolean) => {
       return (
         <PreviewBlock level={level}>
           <ChildrenContainer placement={placement}>
@@ -520,7 +531,7 @@ const FormBuilder: React.FC = () => {
                 {renderPreview(
                   { ...child, mandatory: child.mandatory ?? inheritedMandatory },
                   level + 1,
-                  parentSelected
+                  childParentSelected
                 )}
               </OptionContainer>
             ))}
@@ -561,7 +572,7 @@ const FormBuilder: React.FC = () => {
               ))}
             </PreviewBlock>
 
-            {selectedChildren.length > 0 && childrenLayout(selectedChildren, placement, level + 1)}
+            {selectedChildren.length > 0 && childrenLayout(selectedChildren, placement, level + 1, true)}
           </>
         );
       }
@@ -589,7 +600,7 @@ const FormBuilder: React.FC = () => {
             </OptionWrapper>
           ))}
 
-          {selectedChildren.length > 0 && childrenLayout(selectedChildren, placement, level + 1)}
+          {selectedChildren.length > 0 && childrenLayout(selectedChildren, placement, level + 1, true)}
         </PreviewBlock>
       );
     }
@@ -712,7 +723,8 @@ const FormBuilder: React.FC = () => {
               childrenLayout(
                 (field.options || []).find((opt) => opt.value === fieldValues[field.id])!.children!,
                 (field.options || []).find((opt) => opt.value === fieldValues[field.id])!.placement || "column",
-                level + 1
+                level + 1,
+                !!fieldValues[field.id]
               )}
           </>
         )}
@@ -740,7 +752,7 @@ const FormBuilder: React.FC = () => {
                 {checkedOptions[opt.id] &&
                   opt.children &&
                   opt.children.length > 0 &&
-                  childrenLayout(opt.children, opt.placement || "column", level + 1)}
+                  childrenLayout(opt.children, opt.placement || "column", level + 1, !!checkedOptions[opt.id])}
               </OptionWrapper>
             ))}
             {error && <ErrorHelper>{error}</ErrorHelper>}
@@ -770,7 +782,7 @@ const FormBuilder: React.FC = () => {
                 {selectedOptions[field.id] === opt.id &&
                   opt.children &&
                   opt.children.length > 0 &&
-                  childrenLayout(opt.children, opt.placement || "column", level + 1)}
+                  childrenLayout(opt.children, opt.placement || "column", level + 1, selectedOptions[field.id] === opt.id)}
               </OptionWrapper>
             ))}
             {error && <ErrorHelper>{error}</ErrorHelper>}
