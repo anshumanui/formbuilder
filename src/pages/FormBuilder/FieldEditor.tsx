@@ -73,6 +73,28 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
         onChange={(e) => onChange({ ...field, label: e.target.value, key: generateKeyFromLabel(e.target.value) })}
       />
 
+      {/* Mandatory */}
+      <label>
+        <CheckboxInput
+          type="checkbox"
+          checked={field.mandatory || false}
+          onChange={(e) => onChange({ ...field, mandatory: e.target.checked })}
+        />
+        Mandatory Field
+      </label>
+
+      {/* Custom Error Message */}
+      {field.mandatory && (
+        <>
+          <InputLabel>Custom Error Message (optional)</InputLabel>
+          <TextInput
+            value={field.errorMessage || ""}
+            onChange={(e) => onChange({ ...field, errorMessage: e.target.value })}
+            placeholder="This field is required"
+          />
+        </>
+      )}
+
       {/* Type */}
       <InputLabel>Field Type</InputLabel>
       <SelectInput value={field.type} onChange={(e) => onChange({ ...field, type: e.target.value as any })}>
@@ -141,8 +163,12 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
               <LabelBlock>
                 <TextInput
                   placeholder={`Option ${idx + 1}`}
-                  value={opt.value}
-                  onChange={(e) => updateOption(opt.id, (o) => ({ ...o, value: e.target.value }))}
+                  value={opt.label}
+                  onChange={(e) => updateOption(opt.id, (o) => ({ 
+                    ...o, 
+                    label: e.target.value,
+                    key: generateKeyFromLabel(e.target.value)
+                  }))}
                 />
 
                 {/* Only show helper text input for top-level elements */}
@@ -204,7 +230,13 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
             onClick={() =>
               onChange({
                 ...field,
-                options: [...(field.options || []), { id: idGenerator(), value: "", helperText: "", children: [] }],
+                options: [...(field.options || []), { 
+                  id: idGenerator(), 
+                  label: "", 
+                  key: "",
+                  helperText: "", 
+                  children: [] 
+                }],
               })
             }
           >

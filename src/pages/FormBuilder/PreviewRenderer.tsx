@@ -73,7 +73,7 @@ const PreviewRenderer: React.FC<Props> = ({
     
     if (field.type === "select") {
       const selectedValue = fieldValues[field.id];
-      const selectedOption = field.options?.find(opt => opt.value === selectedValue);
+      const selectedOption = field.options?.find(opt => opt.key === selectedValue);
       return selectedOption?.children || [];
     }
     
@@ -81,6 +81,13 @@ const PreviewRenderer: React.FC<Props> = ({
   };
 
   const topLevelChildren = getTopLevelChildren();
+
+  // Clear error when user interacts with field
+  const clearFieldError = () => {
+    if (setClearedFields) {
+      setClearedFields(prev => ({ ...prev, [field.id]: true }));
+    }
+  };
 
   return (
     <>

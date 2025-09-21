@@ -1,4 +1,5 @@
 import type { Block, Field } from "./types";
+import { FORM_CONFIG } from "./config";
 
 export const idGenerator = () => Math.random().toString(36).slice(2, 10);
 
@@ -8,7 +9,6 @@ export const createEmptyField = (): Field => ({
   label: "",
   key: "",
   value: "",
-  separateBlock: false
 });
 
 export const generateKeyFromLabel = (label: string): string => {
@@ -40,7 +40,11 @@ export const cleanBlockForExport = (block: Block): any => {
     if (field.options && field.options.length > 0) {
       cleaned.options = field.options
         .map((opt) => {
-          const optCleaned: any = { id: opt.id, value: opt.value };
+          const optCleaned: any = { 
+            id: opt.id, 
+            label: opt.label,
+            key: opt.key 
+          };
           if (opt.helperText) optCleaned.helperText = opt.helperText;
 
           if (opt.children && opt.children.length > 0) {
@@ -51,7 +55,7 @@ export const cleanBlockForExport = (block: Block): any => {
           }
           return optCleaned;
         })
-        .filter((o) => o.value);
+        .filter((o) => o.label); // Filter by label instead of value
     }
     return cleaned;
   };
@@ -61,6 +65,38 @@ export const cleanBlockForExport = (block: Block): any => {
     separateBlock: block.separateBlock || false,
     field: cleanField(block.field),
   };
+};
+
+// Check if a field should be validated based on parent selection
+export const isFieldActive = (
+  field: Field,
+  parentPath: string[] = [],
+  selectedOptions: Record<string, string>,
+  checkedOptions: Record<string, boolean>,
+  fieldValues: Record<string, string>
+): boolean => {
+  // If no parent path, this is a top-level field
+  if (parentPath.length === 0) return true;
+  
+  // Check each parent in the path
+  for (let i = 0; i < parentPath.length; i += 2) {
+    const parentFieldId = parentPath[i];
+    const parentOptionId = parentPath[i + 1];
+    
+    // Find the parent field type - this would need to be passed or tracked
+    // For now, check all possible selection types
+    const isRadioSelected = selectedOptions[parentFieldId] === parentOptionId;
+    const isCheckboxChecked = checkedOptions[parentOptionId];
+    const isSelectSelected = fieldValues[parentFieldId] && 
+      // We'd need to map values to option IDs for select fields
+      true; // Simplified for now
+    
+    if (!isRadioSelected && !isCheckboxChecked && !isSelectSelected) {
+      return false;
+    }
+  }
+  
+  return true;
 };
 
 // Validation helpers
@@ -76,26 +112,85 @@ export const getErrorForField = (
   selectedOptions: Record<string, string>,
   checkedOptions: Record<string, boolean>
 ): string | null => {
+  // Don't show errors if global config disables validation errors
+  if (!FORM_CONFIG.showValidationErrors) return null;
+
+  // Don't show errors if parent is not selected
   if (!parentSelected) return null;
 
+  // Don't show errors if form hasn't been submitted
   if (!isSubmitted) return null;
 
-  if (field.mandatory) {
-    switch (field.type) {
-      case "radio":
-        if (!selectedOptions[field.id]) return "This field is required";
-        break;
-      case "checkbox":
-        const hasChecked = (field.options || []).some(
-          (opt) => checkedOptions[opt.id]
-        );
-        if (!hasChecked) return "This field is required";
-        break;
-      default:
-        if (!fieldValues[field.id]) return "This field is required";
-    }
+  // Don't show errors if field is not mandatory
+  if (!field.mandatory) return null;
+
+  // Check if field has been interacted with and cleared error
+  if (clearedFields[field.id]) return null;
+
+  // Validate based on field type
+  switch (field.type) {
+    case "radio":
+      if (!selectedOptions[field.id]) {
+        return field.errorMessage || "This field is required";
+      }
+      break;
+      
+    case "checkbox":
+      const hasCheckedOption = (field.options || []).some(
+        (opt) => checkedOptions[opt.id]
+      );
+      if (!hasCheckedOption) {
+        return field.errorMessage || "Please select at least one option";
+      }
+      break;
+      
+    case "select":
+      const selectValue = fieldValues[field.id];
+      if (!selectValue || selectValue === "") {
+        return field.errorMessage || "Please select an option";
+      }
+      break;
+      
+    case "text":
+    case "textarea":
+    case "numeric":
+      const textValue = fieldValues[field.id];
+      if (!textValue || textValue.trim() === "") {
+        return field.errorMessage || "This field is required";
+      }
+      break;
+      
+    default:
+      const defaultValue = fieldValues[field.id];
+      if (!defaultValue) {
+        return field.errorMessage || "This field is required";
+      }
   }
 
   return null;
 };
 
+// Collect all fields recursively with their parent context
+export const collectAllFields = (
+  field: Field,
+  parentPath: string[] = []
+): Array<{ field: Field; parentPath: string[] }> => {
+  const result: Array<{ field: Field; parentPath: string[] }> = [];
+  
+  // Add current field
+  result.push({ field, parentPath });
+  
+  // Add children
+  if (field.options) {
+    field.options.forEach(option => {
+      if (option.children) {
+        option.children.forEach(child => {
+          const childPath = [...parentPath, field.id, option.id];
+          result.push(...collectAllFields(child, childPath));
+        });
+      }
+    });
+  }
+  
+  return result;
+};

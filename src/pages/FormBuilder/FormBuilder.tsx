@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { Block } from "./types";
 import { idGenerator, generateKeyFromLabel, cleanBlockForExport, createEmptyField } from "./helpers";
+import { FORM_CONFIG } from "./config";
 import FieldEditor from "./FieldEditor";
 import PreviewRenderer from "./PreviewRenderer";
 import { Container, BuilderPanel, PreviewPanel, SectionTitle, Button } from "../../assets/Main.styled";
@@ -16,8 +17,8 @@ const FormBuilder: React.FC = () => {
       key: generateKeyFromLabel("Choose an option"),
       value: "",
       options: [
-        { id: idGenerator(), value: "Option 1", helperText: "", children: [] },
-        { id: idGenerator(), value: "Option 2", helperText: "", children: [] },
+        { id: idGenerator(), label: "Option 1", key: "option_1", helperText: "", children: [] },
+        { id: idGenerator(), label: "Option 2", key: "option_2", helperText: "", children: [] },
       ],
     },
   });
@@ -34,7 +35,31 @@ const FormBuilder: React.FC = () => {
     if (block.field.type === "radio" && !selectedOptions[block.field.id] && options.length) {
       setSelectedOptions((prev) => ({ ...prev, [block.field.id]: options[0].id }));
     }
-  }, [block, selectedOptions]);  
+  }, [block, selectedOptions]);
+
+  // TODO: Replace FORM_CONFIG with API call
+  // useEffect(() => {
+  //   // Fetch form configuration from API
+  //   // fetch('/api/form-config')
+  //   //   .then(response => response.json())
+  //   //   .then(config => {
+  //   //     // Update FORM_CONFIG.showValidationErrors = config.showValidationErrors
+  //   //   });
+  // }, []);
+
+  const handleSubmit = () => {
+    setIsSubmitted(true);
+    // Reset cleared fields to show errors for all required fields
+    setClearedFields({});
+  };
+
+  const handleReset = () => {
+    setIsSubmitted(false);
+    setClearedFields({});
+    setSelectedOptions({});
+    setCheckedOptions({});
+    setFieldValues({});
+  };
 
   return (
     <Container>
@@ -64,14 +89,15 @@ const FormBuilder: React.FC = () => {
           setClearedFields={setClearedFields}
         />
 
-        <Button
-          onClick={() => {
-            setIsSubmitted(true);
-            setClearedFields({});
-          }}
-        >
-          Submit
-        </Button>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+          <Button onClick={handleSubmit}>
+            Submit
+          </Button>
+          
+          <Button onClick={handleReset} style={{ background: '#f0f0f0' }}>
+            Reset
+          </Button>
+        </div>
 
         <SectionTitle>JSON Output</SectionTitle>
         <pre>{JSON.stringify(cleanBlockForExport(block), null, 2)}</pre>

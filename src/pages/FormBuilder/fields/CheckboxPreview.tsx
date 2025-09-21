@@ -52,17 +52,18 @@ const CheckboxPreview: React.FC<Props> = ({
               <input
                 type="checkbox"
                 name={field.id}
-                value={opt.value}
+                value={opt.key}
                 checked={isChecked}
                 onChange={() => {
                   setCheckedOptions((prev) => ({
                     ...prev,
                     [opt.id]: !prev[opt.id],
                   }));
-                  setClearedFields({});
+                  // Clear errors for this field when user makes selection
+                  setClearedFields(prev => ({ ...prev, [field.id]: true }));
                 }}
               />{" "}
-              {opt.value}
+              {opt.label}
             </label>
 
             {/* Only render children inline if NOT renderChildrenInParent */}

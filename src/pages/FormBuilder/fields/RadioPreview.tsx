@@ -48,14 +48,15 @@ const RadioPreview: React.FC<Props> = ({
             <input
               type="radio"
               name={field.id}
-              value={opt.value}
+              value={opt.key}
               checked={isSelected}
               onChange={() => {
                 setSelectedOptions((prev) => ({ ...prev, [field.id]: opt.id }));
-                setClearedFields({});
+                // Clear errors for this field when user makes selection
+                setClearedFields(prev => ({ ...prev, [field.id]: true }));
               }}
             />
-            {opt.value}
+            {opt.label}
           </label>
 
           {opt.helperText && level === 0 && <HelperText>{opt.helperText}</HelperText>}

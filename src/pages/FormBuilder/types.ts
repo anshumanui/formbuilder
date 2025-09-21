@@ -18,7 +18,8 @@ export interface Field {
 
 export interface Option {
   id: string;
-  value: string;
+  label: string;
+  key: string; 
   helperText?: string;
   children?: Field[];
   placement?: "row" | "column";

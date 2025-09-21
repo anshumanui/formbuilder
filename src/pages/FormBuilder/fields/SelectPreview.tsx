@@ -39,7 +39,7 @@ const SelectPreview: React.FC<Props> = ({
   renderChildrenInParent = false,
 }) => {
   const value = fieldValues[field.id] || "";
-  const selectedOpt = (field.options || []).find((opt) => opt.value === value);
+  const selectedOpt = (field.options || []).find((opt) => opt.key === value);
 
   return (
     <>
@@ -47,13 +47,14 @@ const SelectPreview: React.FC<Props> = ({
         value={value}
         onChange={(e) => {
           setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }));
-          setClearedFields({});
+          // Clear errors for this field when user makes selection
+          setClearedFields(prev => ({ ...prev, [field.id]: true }));
         }}
       >
         <option value="">-- Select --</option>
         {(field.options || []).map((opt) => (
-          <option key={opt.id} value={opt.value}>
-            {opt.value}
+          <option key={opt.id} value={opt.label}>
+            {opt.label}
           </option>
         ))}
       </select>
