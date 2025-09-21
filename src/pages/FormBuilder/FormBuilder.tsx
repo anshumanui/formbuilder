@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { Block } from "./types";
-import { idGenerator, generateKeyFromLabel, cleanBlockForExport, generateUserResponseJSON } from "./helpers";
+import { idGenerator, generateKeyFromLabel, cleanBlockForExport, createEmptyField, generateUserResponseJSON } from "./helpers";
+import { FORM_CONFIG } from "./config";
 import FieldEditor from "./FieldEditor";
 import PreviewRenderer from "./PreviewRenderer";
 import { Container, BuilderPanel, PreviewPanel, SectionTitle, Button } from "../../assets/Main.styled";
@@ -83,10 +84,115 @@ const FormBuilder: React.FC = () => {
     setUserResponseJSON({});
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const jsonData = JSON.parse(text);
+      
+      // Validate the JSON structure
+      if (jsonData && jsonData.field && jsonData.field.id) {
+        // Reset form state
+        setIsSubmitted(false);
+        setClearedFields({});
+        setSelectedOptions({});
+        setCheckedOptions({});
+        setFieldValues({});
+        setUserResponseJSON({});
+        
+        // Load the new form structure
+        setBlock(jsonData);
+        
+        // Initialize radio selections if needed
+        if (jsonData.field.type === "radio" && jsonData.field.options?.length > 0) {
+          setSelectedOptions({ [jsonData.field.id]: jsonData.field.options[0].id });
+        }
+        
+        alert("Form loaded successfully!");
+      } else {
+        alert("Invalid JSON structure. Please ensure it contains a valid form configuration.");
+      }
+    } catch (error) {
+      alert("Error reading file. Please ensure it's a valid JSON file.");
+      console.error("File reading error:", error);
+    }
+    
+    // Reset file input
+    event.target.value = '';
+  };
+
+  const handleLoadFromFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const jsonData = JSON.parse(text);
+        
+        // Validate the JSON structure
+        if (jsonData && jsonData.field && jsonData.field.id) {
+          // Reset form state
+          setIsSubmitted(false);
+          setClearedFields({});
+          setSelectedOptions({});
+          setCheckedOptions({});
+          setFieldValues({});
+          setUserResponseJSON({});
+          
+          // Load the new form structure
+          setBlock(jsonData);
+          
+          // Initialize radio selections if needed
+          if (jsonData.field.type === "radio" && jsonData.field.options?.length > 0) {
+            setSelectedOptions({ [jsonData.field.id]: jsonData.field.options[0].id });
+          }
+          
+          alert("Form loaded successfully!");
+        } else {
+          alert("Invalid JSON structure. Please ensure it contains a valid form configuration.");
+        }
+      } catch (error) {
+        alert("Error reading file. Please ensure it's a valid JSON file.");
+        console.error("File reading error:", error);
+      }
+    };
+    input.click();
+  };
+
+  const handleExportJSON = () => {
+    const jsonData = cleanBlockForExport(block);
+    const dataStr = JSON.stringify(jsonData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `form-${block.id}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
   return (
     <Container>
       <BuilderPanel>
-        <SectionTitle>Form Builder</SectionTitle>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <SectionTitle style={{ margin: 0 }}>Form Builder</SectionTitle>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Button onClick={handleLoadFromFile} style={{ background: '#e8f5e8', borderColor: '#4caf50', color: '#2e7d32' }}>
+              Load Form from JSON
+            </Button>
+            <Button onClick={handleExportJSON} style={{ background: '#e3f2fd', borderColor: '#2196f3', color: '#1976d2' }}>
+              Export Form JSON
+            </Button>
+          </div>
+        </div>
+
         <FieldEditor
           field={block.field}
           onChange={(updated) => setBlock({ ...block, field: updated })}
