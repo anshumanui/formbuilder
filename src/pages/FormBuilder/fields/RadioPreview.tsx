@@ -1,7 +1,7 @@
 import React from "react";
 import type { Field, Block } from "../types";
 import PreviewRenderer from "../PreviewRenderer";
-import { OptionWrapper, HelperText, ChildrenContainer, OptionContainer, ErrorHelper, BlockWrapper } from "../../../assets/Main.styled";
+import { OptionWrapper, HelperText, ChildrenContainer, ErrorHelper, BlockWrapper } from "../../../assets/Main.styled";
 
 interface Props {
   field: Field;
@@ -15,8 +15,10 @@ interface Props {
   checkedOptions: Record<string, boolean>;
   fieldValues: Record<string, string>;
   clearedFields: Record<string, boolean>;
+  multiSelectValues: Record<string, string[]>;
   setCheckedOptions: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   setFieldValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setMultiSelectValues: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   error?: string | null;
   renderChildrenInParent?: boolean;
 }
@@ -33,8 +35,10 @@ const RadioPreview: React.FC<Props> = ({
   checkedOptions,
   fieldValues,
   clearedFields,
+  multiSelectValues,
   setCheckedOptions,
   setFieldValues,
+  setMultiSelectValues,
   error,
   renderChildrenInParent = false,
 }) => (
@@ -78,10 +82,12 @@ const RadioPreview: React.FC<Props> = ({
                         checkedOptions={checkedOptions}
                         fieldValues={fieldValues}
                         clearedFields={clearedFields}
+                        multiSelectValues={multiSelectValues}
                         setSelectedOptions={setSelectedOptions}
                         setCheckedOptions={setCheckedOptions}
                         setFieldValues={setFieldValues}
                         setClearedFields={setClearedFields}
+                        setMultiSelectValues={setMultiSelectValues}
                     />
                   </BlockWrapper>
                 ))}

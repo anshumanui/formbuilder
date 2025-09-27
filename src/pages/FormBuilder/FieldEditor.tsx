@@ -83,6 +83,16 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
         Mandatory Field
       </label>
 
+      {/* Block Element - NEW */}
+      <label>
+        <CheckboxInput
+          type="checkbox"
+          checked={field.blockElement || false}
+          onChange={(e) => onChange({ ...field, blockElement: e.target.checked })}
+        />
+        Block Element (Full Width)
+      </label>
+
       {/* Custom Error Message */}
       {field.mandatory && (
         <>
@@ -104,6 +114,7 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
         <option value="radio">Radio</option>
         <option value="checkbox">Checkbox</option>
         <option value="select">Select</option>
+        <option value="multiselect">Multi-Select</option>
       </SelectInput>
 
       {/* Common Props */}
@@ -154,8 +165,25 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
         </>
       )}
 
-      {/* Options for radio / checkbox / select */}
-      {(field.type === "select" || field.type === "radio" || field.type === "checkbox") && (
+      {/* Multi-select specific options */}
+      {field.type === "multiselect" && (
+        <>
+          <InputLabel>Max Selections (optional)</InputLabel>
+          <TextInput
+            type="number"
+            value={field.maxSelections || ""}
+            onChange={(e) => onChange({ 
+              ...field, 
+              maxSelections: e.target.value ? parseInt(e.target.value) : undefined 
+            })}
+            placeholder="Leave empty for unlimited"
+            min="1"
+          />
+        </>
+      )}
+
+      {/* Options for radio / checkbox / select / multiselect */}
+      {(field.type === "select" || field.type === "radio" || field.type === "checkbox" || field.type === "multiselect") && (
         <>
           <InputLabel>Options</InputLabel>
           {(field.options || []).map((opt, idx) => (

@@ -36,6 +36,8 @@ export const cleanBlockForExport = (block: Block): any => {
     if (field.icon) cleaned.icon = field.icon;
     if (field.iconAlignment) cleaned.iconAlignment = field.iconAlignment;
     if (typeof field.decimalPoints === "number") cleaned.decimalPoints = field.decimalPoints;
+    if (field.maxSelections) cleaned.maxSelections = field.maxSelections;
+    if (field.blockElement) cleaned.blockElement = field.blockElement; // NEW
 
     if (field.options && field.options.length > 0) {
       cleaned.options = field.options
@@ -110,7 +112,8 @@ export const getErrorForField = (
   fieldValues: Record<string, string>,
   clearedFields: Record<string, boolean>,
   selectedOptions: Record<string, string>,
-  checkedOptions: Record<string, boolean>
+  checkedOptions: Record<string, boolean>,
+  multiSelectValues?: Record<string, string[]>
 ): string | null => {
   // Don't show errors if global config disables validation errors
   if (!FORM_CONFIG.showValidationErrors) return null;
@@ -148,6 +151,13 @@ export const getErrorForField = (
       const selectValue = fieldValues[field.id];
       if (!selectValue || selectValue === "") {
         return field.errorMessage || "Please select an option";
+      }
+      break;
+
+    case "multiselect":
+      const multiSelectSelected = multiSelectValues?.[field.id] || [];
+      if (multiSelectSelected.length === 0) {
+        return field.errorMessage || "Please select at least one option";
       }
       break;
       
@@ -200,7 +210,8 @@ export const generateUserResponseJSON = (
   block: Block,
   selectedOptions: Record<string, string>,
   checkedOptions: Record<string, boolean>,
-  fieldValues: Record<string, string>
+  fieldValues: Record<string, string>,
+  multiSelectValues: Record<string, string[]>
 ): any => {
   
   const buildFieldResponse = (field: Field): any => {
@@ -274,6 +285,34 @@ export const generateUserResponseJSON = (
         }
       }
     }
+
+    else if (field.type === "multiselect") {
+      const selectedValues = multiSelectValues[field.id] || [];
+      const multiselectResponse: any = {};
+      
+      selectedValues.forEach(selectedValue => {
+        const selectedOption = field.options?.find(opt => opt.key === selectedValue);
+        if (selectedOption) {
+          multiselectResponse[selectedOption.key] = {
+            selected: true
+          };
+          
+          // Add children responses if any
+          if (selectedOption.children && selectedOption.children.length > 0) {
+            selectedOption.children.forEach(child => {
+              const childResponse = buildFieldResponse(child);
+              if (Object.keys(childResponse).length > 0) {
+                Object.assign(multiselectResponse[selectedOption.key], childResponse);
+              }
+            });
+          }
+        }
+      });
+      
+      if (Object.keys(multiselectResponse).length > 0) {
+        response[field.key] = multiselectResponse;
+      }
+    }
     
     else if (field.type === "text" || field.type === "textarea" || field.type === "numeric") {
       const value = fieldValues[field.id];
@@ -301,10 +340,12 @@ export const mapUserResponseToFormState = (
   selectedOptions: Record<string, string>;
   checkedOptions: Record<string, boolean>;
   fieldValues: Record<string, string>;
+  multiSelectValues: Record<string, string[]>;
 } => {
   const selectedOptions: Record<string, string> = {};
   const checkedOptions: Record<string, boolean> = {};
   const fieldValues: Record<string, string> = {};
+  const multiSelectValues: Record<string, string[]> = {};
 
   const processFieldResponse = (field: Field, response: any) => {
     if (!response) return;
@@ -361,6 +402,31 @@ export const mapUserResponseToFormState = (
         }
       });
     }
+
+    else if (field.type === "multiselect") {
+      const multiselectResponse = response[field.key];
+      if (multiselectResponse) {
+        const selectedKeys: string[] = [];
+        
+        field.options?.forEach(option => {
+          const optionResponse = multiselectResponse[option.key];
+          if (optionResponse && optionResponse.selected) {
+            selectedKeys.push(option.key);
+            
+            // Process children if any
+            if (option.children) {
+              option.children.forEach(child => {
+                processFieldResponse(child, optionResponse);
+              });
+            }
+          }
+        });
+        
+        if (selectedKeys.length > 0) {
+          multiSelectValues[field.id] = selectedKeys;
+        }
+      }
+    }
     
     else if (field.type === "text" || field.type === "textarea" || field.type === "numeric") {
       const value = response[field.key];
@@ -379,6 +445,7 @@ export const mapUserResponseToFormState = (
   return {
     selectedOptions,
     checkedOptions,
-    fieldValues
+    fieldValues,
+    multiSelectValues
   };
 };

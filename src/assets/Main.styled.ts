@@ -164,7 +164,12 @@ export const RemoveButton = styled(Button)`
   color: #900;
 `;
 
-export const BlockWrapper = styled.div<{ level?: number; separate?: boolean }>`
+export const BlockWrapper = styled.div<{ 
+  level?: number; 
+  separate?: boolean; 
+  blockElement?: boolean;
+  placement?: "row" | "column";
+}>`
   background: #fff;
   padding: 16px;
   margin-bottom: 16px;
@@ -177,6 +182,18 @@ export const BlockWrapper = styled.div<{ level?: number; separate?: boolean }>`
       : 'none'
   };
 
+  /* Handle block element styling when in flex container */
+  ${(p) => p.blockElement && css`
+    flex: 1 1 100%;
+    width: 100%;
+    flex-basis: 100%;
+  `}
+
+  /* Default flex behavior for non-block elements */
+  ${(p) => !p.blockElement && css`
+    flex: 0 1 auto;
+  `}
+
   ${(p) =>
     p.separate &&
     css`
@@ -186,4 +203,29 @@ export const BlockWrapper = styled.div<{ level?: number; separate?: boolean }>`
       margin-top: 16px;
       /* Keep the same styling as parent block */
     `}
+
+  /* When this wrapper is a direct child of ChildrenContainer with row placement */
+  ${(p) => p.placement === "row" && css`
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+    
+    /* Child elements in row layout */
+    > * {
+      ${p.blockElement ? 'flex: 1 1 100%;' : 'flex: 0 1 auto;'}
+    }
+  `}
+
+  /* When this wrapper is a direct child of ChildrenContainer with column placement */
+  ${(p) => p.placement === "column" && css`
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    
+    /* Child elements in column layout */
+    > * {
+      width: 100%;
+    }
+  `}
 `;

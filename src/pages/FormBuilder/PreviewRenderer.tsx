@@ -13,6 +13,7 @@ import NumericFieldPreview from "./fields/NumericFieldPreview";
 import SelectPreview from "./fields/SelectPreview";
 import CheckboxPreview from "./fields/CheckboxPreview";
 import RadioPreview from "./fields/RadioPreview";
+import MultiSelectPreview from "./fields/MultiSelectPreview";
 
 interface Props {
   field: Field;
@@ -24,10 +25,12 @@ interface Props {
   checkedOptions: Record<string, boolean>;
   fieldValues: Record<string, string>;
   clearedFields: Record<string, boolean>;
+  multiSelectValues: Record<string, string[]>;
   setSelectedOptions?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setCheckedOptions?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   setFieldValues?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setClearedFields?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  setMultiSelectValues?: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
 }
 
 const PreviewRenderer: React.FC<Props> = ({
@@ -40,10 +43,12 @@ const PreviewRenderer: React.FC<Props> = ({
   checkedOptions,
   fieldValues,
   clearedFields,
+  multiSelectValues,
   setSelectedOptions,
   setCheckedOptions,
   setFieldValues,
   setClearedFields,
+  setMultiSelectValues,
 }) => {
   const error = getErrorForField(
     field,
@@ -52,7 +57,8 @@ const PreviewRenderer: React.FC<Props> = ({
     fieldValues,
     clearedFields,
     selectedOptions,
-    checkedOptions
+    checkedOptions,
+    multiSelectValues
   );
 
   // Get children from selected options for top-level fields
@@ -76,22 +82,26 @@ const PreviewRenderer: React.FC<Props> = ({
       const selectedOption = field.options?.find(opt => opt.key === selectedValue);
       return selectedOption?.children || [];
     }
+
+    if (field.type === "multiselect") {
+      const selectedValues = multiSelectValues[field.id] || [];
+      return field.options?.flatMap(opt => 
+        selectedValues.includes(opt.key) ? (opt.children || []) : []
+      ) || [];
+    }
     
     return [];
   };
 
   const topLevelChildren = getTopLevelChildren();
 
-  // Clear error when user interacts with field
-  const clearFieldError = () => {
-    if (setClearedFields) {
-      setClearedFields(prev => ({ ...prev, [field.id]: true }));
-    }
-  };
-
   return (
     <>
-      <BlockWrapper level={level}>
+      <BlockWrapper 
+        level={level} 
+        blockElement={field.blockElement}
+        separate={level === 0 && block.separateBlock}
+      >
         {field.label && <PreviewLabel>{field.label}</PreviewLabel>}
 
         {field.type === "text" && fieldValues && setFieldValues && setClearedFields && (
@@ -139,10 +149,11 @@ const PreviewRenderer: React.FC<Props> = ({
             selectedOptions={selectedOptions}
             checkedOptions={checkedOptions}
             clearedFields={clearedFields}
+            multiSelectValues={multiSelectValues}
             setSelectedOptions={setSelectedOptions!}
             setCheckedOptions={setCheckedOptions!}
+            setMultiSelectValues={setMultiSelectValues!}
             error={error}
-            // Pass flag to prevent rendering children in SelectPreview
             renderChildrenInParent={level === 0 && block.separateBlock}
           />
         )}
@@ -159,10 +170,11 @@ const PreviewRenderer: React.FC<Props> = ({
             selectedOptions={selectedOptions}
             fieldValues={fieldValues}
             clearedFields={clearedFields}
+            multiSelectValues={multiSelectValues}
             setSelectedOptions={setSelectedOptions!}
             setFieldValues={setFieldValues!}
+            setMultiSelectValues={setMultiSelectValues!}
             error={error}
-            // Pass flag to prevent rendering children in CheckboxPreview
             renderChildrenInParent={level === 0 && block.separateBlock}
           />
         )}
@@ -179,10 +191,33 @@ const PreviewRenderer: React.FC<Props> = ({
             checkedOptions={checkedOptions}
             fieldValues={fieldValues}
             clearedFields={clearedFields}
+            multiSelectValues={multiSelectValues}
+            setCheckedOptions={setCheckedOptions!}
+            setFieldValues={setFieldValues!}
+            setMultiSelectValues={setMultiSelectValues!}
+            error={error}
+            renderChildrenInParent={level === 0 && block.separateBlock}
+          />
+        )}
+
+        {field.type === "multiselect" && multiSelectValues && setMultiSelectValues && (
+          <MultiSelectPreview
+            field={field}
+            block={block}
+            level={level}
+            parentSelected={parentSelected}
+            multiSelectValues={multiSelectValues}
+            setMultiSelectValues={setMultiSelectValues}
+            setClearedFields={setClearedFields!}
+            isSubmitted={isSubmitted}
+            selectedOptions={selectedOptions}
+            checkedOptions={checkedOptions}
+            fieldValues={fieldValues}
+            clearedFields={clearedFields}
+            setSelectedOptions={setSelectedOptions!}
             setCheckedOptions={setCheckedOptions!}
             setFieldValues={setFieldValues!}
             error={error}
-            // Pass flag to prevent rendering children in RadioPreview
             renderChildrenInParent={level === 0 && block.separateBlock}
           />
         )}
@@ -203,10 +238,12 @@ const PreviewRenderer: React.FC<Props> = ({
               checkedOptions={checkedOptions}
               fieldValues={fieldValues}
               clearedFields={clearedFields}
+              multiSelectValues={multiSelectValues}
               setSelectedOptions={setSelectedOptions}
               setCheckedOptions={setCheckedOptions}
               setFieldValues={setFieldValues}
               setClearedFields={setClearedFields}
+              setMultiSelectValues={setMultiSelectValues}
             />
           ))}
         </BlockWrapper>

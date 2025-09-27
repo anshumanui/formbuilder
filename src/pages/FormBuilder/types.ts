@@ -1,4 +1,4 @@
-export type FieldType = "radio" | "text" | "checkbox" | "textarea" | "select" | "numeric";
+export type FieldType = "radio" | "text" | "checkbox" | "textarea" | "select" | "numeric" | "multiselect";
 
 export interface Field {
   id: string;
@@ -14,6 +14,8 @@ export interface Field {
   iconAlignment?: "left" | "right";
   options?: Option[];
   decimalPoints?: 0 | 1 | 2;
+  maxSelections?: number; // Optional limit on number of selections for multiselect
+  blockElement?: boolean; // New property to make field take full width
 }
 
 export interface Option {

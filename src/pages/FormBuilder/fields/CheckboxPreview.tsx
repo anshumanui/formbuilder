@@ -19,8 +19,10 @@ interface Props {
   selectedOptions: Record<string, string>;
   fieldValues: Record<string, string>;
   clearedFields: Record<string, boolean>;
+  multiSelectValues: Record<string, string[]>;
   setSelectedOptions: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setFieldValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setMultiSelectValues: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   error?: string | null;
   renderChildrenInParent?: boolean;
 }
@@ -36,8 +38,10 @@ const CheckboxPreview: React.FC<Props> = ({
   selectedOptions,
   fieldValues,
   clearedFields,
+  multiSelectValues,
   setSelectedOptions,
   setFieldValues,
+  setMultiSelectValues,
   error,
   renderChildrenInParent = false,
 }) => {
@@ -71,23 +75,24 @@ const CheckboxPreview: React.FC<Props> = ({
               isChecked && (opt.children?.length ?? 0) > 0 && (
               <ChildrenContainer placement={opt.placement || "column"}>
                 {opt.children!.map((child) => (
-                  <OptionContainer key={child.id}>
-                    <PreviewRenderer
-                      field={child}
-                      block={block}
-                      level={level + 1}
-                      parentSelected={isChecked}
-                      isSubmitted={isSubmitted}
-                      selectedOptions={selectedOptions}
-                      checkedOptions={checkedOptions}
-                      fieldValues={fieldValues}
-                      clearedFields={clearedFields}
-                      setSelectedOptions={setSelectedOptions}
-                      setCheckedOptions={setCheckedOptions}
-                      setFieldValues={setFieldValues}
-                      setClearedFields={setClearedFields}
-                    />
-                  </OptionContainer>
+                  <PreviewRenderer
+                    key={child.id}
+                    field={child}
+                    block={block}
+                    level={level + 1}
+                    parentSelected={isChecked}
+                    isSubmitted={isSubmitted}
+                    selectedOptions={selectedOptions}
+                    checkedOptions={checkedOptions}
+                    fieldValues={fieldValues}
+                    clearedFields={clearedFields}
+                    multiSelectValues={multiSelectValues}
+                    setSelectedOptions={setSelectedOptions}
+                    setCheckedOptions={setCheckedOptions}
+                    setFieldValues={setFieldValues}
+                    setClearedFields={setClearedFields}
+                    setMultiSelectValues={setMultiSelectValues}
+                  />
                 ))}
               </ChildrenContainer>
             )}

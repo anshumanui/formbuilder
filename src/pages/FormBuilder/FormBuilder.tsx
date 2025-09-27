@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { Block } from "./types";
-import { idGenerator, generateKeyFromLabel, cleanBlockForExport, createEmptyField, generateUserResponseJSON, mapUserResponseToFormState } from "./helpers";
+import { idGenerator, generateKeyFromLabel, cleanBlockForExport, generateUserResponseJSON, mapUserResponseToFormState } from "./helpers";
 import { FORM_CONFIG } from "./config";
 import FieldEditor from "./FieldEditor";
 import PreviewRenderer from "./PreviewRenderer";
@@ -26,6 +26,7 @@ const FormBuilder: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [checkedOptions, setCheckedOptions] = useState<Record<string, boolean>>({});
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [multiSelectValues, setMultiSelectValues] = useState<Record<string, string[]>>({});
   const [clearedFields, setClearedFields] = useState<Record<string, boolean>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [userResponseJSON, setUserResponseJSON] = useState<any>({});
@@ -36,10 +37,11 @@ const FormBuilder: React.FC = () => {
       block,
       selectedOptions,
       checkedOptions,
-      fieldValues
+      fieldValues,
+      multiSelectValues
     );
     setUserResponseJSON(response);
-  }, [block, selectedOptions, checkedOptions, fieldValues]);
+  }, [block, selectedOptions, checkedOptions, fieldValues, multiSelectValues]);
 
   // Initialize selected option for top-level radio
   useEffect(() => {
@@ -69,7 +71,8 @@ const FormBuilder: React.FC = () => {
       block,
       selectedOptions,
       checkedOptions,
-      fieldValues
+      fieldValues,
+      multiSelectValues
     );
     
     console.log("User Response JSON:", userResponse);
@@ -81,6 +84,7 @@ const FormBuilder: React.FC = () => {
     setSelectedOptions({});
     setCheckedOptions({});
     setFieldValues({});
+    setMultiSelectValues({});
     setUserResponseJSON({});
   };
 
@@ -100,6 +104,7 @@ const FormBuilder: React.FC = () => {
         setSelectedOptions({});
         setCheckedOptions({});
         setFieldValues({});
+        setMultiSelectValues({});
         setUserResponseJSON({});
         
         // Load the new form structure
@@ -143,6 +148,7 @@ const FormBuilder: React.FC = () => {
           setSelectedOptions({});
           setCheckedOptions({});
           setFieldValues({});
+          setMultiSelectValues({});
           setUserResponseJSON({});
           
           // Load the new form structure
@@ -197,6 +203,7 @@ const FormBuilder: React.FC = () => {
         setSelectedOptions(mappedState.selectedOptions);
         setCheckedOptions(mappedState.checkedOptions);
         setFieldValues(mappedState.fieldValues);
+        setMultiSelectValues(mappedState.multiSelectValues);
         
         // Clear any existing errors and submission state
         setIsSubmitted(false);
@@ -269,10 +276,12 @@ const FormBuilder: React.FC = () => {
           checkedOptions={checkedOptions}
           fieldValues={fieldValues}
           clearedFields={clearedFields}
+          multiSelectValues={multiSelectValues}
           setSelectedOptions={setSelectedOptions}
           setCheckedOptions={setCheckedOptions}
           setFieldValues={setFieldValues}
           setClearedFields={setClearedFields}
+          setMultiSelectValues={setMultiSelectValues}
         />
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
