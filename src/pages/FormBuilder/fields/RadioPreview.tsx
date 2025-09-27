@@ -41,38 +41,49 @@ const RadioPreview: React.FC<Props> = ({
   setMultiSelectValues,
   error,
   renderChildrenInParent = false,
-}) => (
-  <>
-    {(field.options || []).map((opt) => {
-      const isSelected = selectedOptions[field.id] === opt.id;
+}) => {
+  // Sort children based on order property
+  const sortFieldsByOrder = (fields: Field[]): Field[] => {
+    return [...fields].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+  };
 
-      return (
-        <OptionWrapper key={opt.id}>
-          <label>
-            <input
-              type="radio"
-              name={field.id}
-              value={opt.key}
-              checked={isSelected}
-              onChange={() => {
-                setSelectedOptions((prev) => ({ ...prev, [field.id]: opt.id }));
-                // Clear errors for this field when user makes selection
-                setClearedFields(prev => ({ ...prev, [field.id]: true }));
-              }}
-            />
-            {opt.label}
-          </label>
+  return (
+    <>
+      {(field.options || []).map((opt) => {
+        const isSelected = selectedOptions[field.id] === opt.id;
+        const sortedChildren = opt.children ? sortFieldsByOrder(opt.children) : [];
 
-          {opt.helperText && level === 0 && <HelperText>{opt.helperText}</HelperText>}
+        return (
+          <OptionWrapper key={opt.id}>
+            <label>
+              <input
+                type="radio"
+                name={field.id}
+                value={opt.key}
+                checked={isSelected}
+                onChange={() => {
+                  setSelectedOptions((prev) => ({ ...prev, [field.id]: opt.id }));
+                  // Clear errors for this field when user makes selection
+                  setClearedFields(prev => ({ ...prev, [field.id]: true }));
+                }}
+              />
+              {opt.label}
+            </label>
 
-          {/* Only render children inline if NOT renderChildrenInParent */}
-          {!renderChildrenInParent &&
-            selectedOptions[field.id] === opt.id &&
-            (opt.children ?? []).length > 0 && (
+            {opt.helperText && level === 0 && <HelperText>{opt.helperText}</HelperText>}
+
+            {/* Only render children inline if NOT renderChildrenInParent */}
+            {!renderChildrenInParent &&
+              selectedOptions[field.id] === opt.id &&
+              sortedChildren.length > 0 && (
                 <ChildrenContainer placement={opt.placement || "column"}>
-                {(opt.children ?? []).map((child) => (
-                  <BlockWrapper key={child.id} level={level + 1}>
-                    <PreviewRenderer
+                  {sortedChildren.map((child) => (
+                    <BlockWrapper key={child.id} level={level + 1}>
+                      <PreviewRenderer
                         field={child}
                         block={block}
                         level={level + 1}
@@ -88,16 +99,17 @@ const RadioPreview: React.FC<Props> = ({
                         setFieldValues={setFieldValues}
                         setClearedFields={setClearedFields}
                         setMultiSelectValues={setMultiSelectValues}
-                    />
-                  </BlockWrapper>
-                ))}
+                      />
+                    </BlockWrapper>
+                  ))}
                 </ChildrenContainer>
-            )}
-        </OptionWrapper>
-      );
-    })}
-    {error && <ErrorHelper>{error}</ErrorHelper>}
-  </>
-);
+              )}
+          </OptionWrapper>
+        );
+      })}
+      {error && <ErrorHelper>{error}</ErrorHelper>}
+    </>
+  );
+};
 
 export default RadioPreview;

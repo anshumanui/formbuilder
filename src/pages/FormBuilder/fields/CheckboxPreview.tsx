@@ -45,10 +45,20 @@ const CheckboxPreview: React.FC<Props> = ({
   error,
   renderChildrenInParent = false,
 }) => {
+  // Sort children based on order property
+  const sortFieldsByOrder = (fields: Field[]): Field[] => {
+    return [...fields].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+  };
+
   return (
     <>
       {(field.options || []).map((opt) => {
         const isChecked = !!checkedOptions[opt.id];
+        const sortedChildren = opt.children ? sortFieldsByOrder(opt.children) : [];
 
         return (
           <OptionWrapper key={opt.id}>
@@ -72,9 +82,9 @@ const CheckboxPreview: React.FC<Props> = ({
 
             {/* Only render children inline if NOT renderChildrenInParent */}
             {!renderChildrenInParent &&
-              isChecked && (opt.children?.length ?? 0) > 0 && (
+              isChecked && sortedChildren.length > 0 && (
               <ChildrenContainer placement={opt.placement || "column"}>
-                {opt.children!.map((child) => (
+                {sortedChildren.map((child) => (
                   <PreviewRenderer
                     key={child.id}
                     field={child}

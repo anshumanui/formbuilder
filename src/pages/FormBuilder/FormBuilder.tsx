@@ -9,7 +9,8 @@ import { Container, BuilderPanel, PreviewPanel, SectionTitle, Button } from "../
 const FormBuilder: React.FC = () => {
   const [block, setBlock] = useState<Block>({
     id: idGenerator(),
-    separateBlock: false, // ✅ top-level separate block
+    separateBlock: false,
+    displayOrdering: false, // Initialize displayOrdering
     field: {
       id: idGenerator(),
       type: "radio",

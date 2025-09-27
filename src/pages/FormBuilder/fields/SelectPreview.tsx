@@ -45,6 +45,17 @@ const SelectPreview: React.FC<Props> = ({
   const value = fieldValues[field.id] || "";
   const selectedOpt = (field.options || []).find((opt) => opt.key === value);
 
+  // Sort children based on order property
+  const sortFieldsByOrder = (fields: Field[]): Field[] => {
+    return [...fields].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+  };
+
+  const sortedChildren = selectedOpt?.children ? sortFieldsByOrder(selectedOpt.children) : [];
+
   return (
     <>
       <select
@@ -57,7 +68,7 @@ const SelectPreview: React.FC<Props> = ({
       >
         <option value="">-- Select --</option>
         {(field.options || []).map((opt) => (
-          <option key={opt.id} value={opt.label}>
+          <option key={opt.id} value={opt.key}>
             {opt.label}
           </option>
         ))}
@@ -67,9 +78,9 @@ const SelectPreview: React.FC<Props> = ({
 
       {/* Only render children inline if NOT renderChildrenInParent */}
       {!renderChildrenInParent &&
-        value && (selectedOpt?.children ?? []).length > 0 && (
+        value && sortedChildren.length > 0 && (
         <ChildrenContainer placement={selectedOpt?.placement || "column"}>
-          {(selectedOpt?.children ?? []).map((child) => (
+          {sortedChildren.map((child) => (
             <BlockWrapper key={child.id} level={level + 1}>
               <PreviewRenderer
                 field={child}

@@ -29,6 +29,8 @@ export const cleanBlockForExport = (block: Block): any => {
       key: field.key,
     };
 
+    // Include order if it exists
+    if (typeof field.order === "number") cleaned.order = field.order;
     if (field.mandatory) cleaned.mandatory = true;
     if (field.errorMessage) cleaned.errorMessage = field.errorMessage;
     if (field.placeholder) cleaned.placeholder = field.placeholder;
@@ -37,7 +39,7 @@ export const cleanBlockForExport = (block: Block): any => {
     if (field.iconAlignment) cleaned.iconAlignment = field.iconAlignment;
     if (typeof field.decimalPoints === "number") cleaned.decimalPoints = field.decimalPoints;
     if (field.maxSelections) cleaned.maxSelections = field.maxSelections;
-    if (field.blockElement) cleaned.blockElement = field.blockElement; // NEW
+    if (field.blockElement) cleaned.blockElement = field.blockElement;
 
     if (field.options && field.options.length > 0) {
       cleaned.options = field.options
@@ -65,6 +67,7 @@ export const cleanBlockForExport = (block: Block): any => {
   return {
     id: block.id,
     separateBlock: block.separateBlock || false,
+    displayOrdering: block.displayOrdering || false,
     field: cleanField(block.field),
   };
 };

@@ -56,14 +56,25 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
     <FieldContainer level={level}>
       {/* Only top-level: Render as separate block */}
       {level === 0 && (
-        <label>
-          <CheckboxInput
-            type="checkbox"
-            checked={block.separateBlock}
-            onChange={(e) => setBlock({ ...block, separateBlock: e.target.checked })}
-          />
-          Render as Separate Block?
-        </label>
+        <>
+          <label>
+            <CheckboxInput
+              type="checkbox"
+              checked={block.separateBlock}
+              onChange={(e) => setBlock({ ...block, separateBlock: e.target.checked })}
+            />
+            Render as Separate Block?
+          </label>
+
+          <label>
+            <CheckboxInput
+              type="checkbox"
+              checked={block.displayOrdering || false}
+              onChange={(e) => setBlock({ ...block, displayOrdering: e.target.checked })}
+            />
+            Display Ordering?
+          </label>
+        </>
       )}
 
       {/* Label */}
@@ -71,6 +82,16 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
       <TextInput
         value={field.label}
         onChange={(e) => onChange({ ...field, label: e.target.value, key: generateKeyFromLabel(e.target.value) })}
+      />
+
+      {/* Order - NEW */}
+      <InputLabel>Order</InputLabel>
+      <TextInput
+        type="number"
+        value={field.order || ""}
+        onChange={(e) => onChange({ ...field, order: e.target.value ? parseInt(e.target.value) : undefined })}
+        placeholder="Field display order (optional)"
+        min="1"
       />
 
       {/* Mandatory */}
@@ -83,7 +104,7 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
         Mandatory Field
       </label>
 
-      {/* Block Element - NEW */}
+      {/* Block Element */}
       <label>
         <CheckboxInput
           type="checkbox"

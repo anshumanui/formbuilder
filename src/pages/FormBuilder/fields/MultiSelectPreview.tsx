@@ -44,6 +44,15 @@ const MultiSelectPreview: React.FC<Props> = ({
 }) => {
   const selectedValues = multiSelectValues[field.id] || [];
   
+  // Sort children based on order property
+  const sortFieldsByOrder = (fields: Field[]): Field[] => {
+    return [...fields].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+  };
+  
   const handleSelectionChange = (optionKey: string, isSelected: boolean) => {
     setMultiSelectValues((prev) => {
       const currentValues = prev[field.id] || [];
@@ -132,43 +141,47 @@ const MultiSelectPreview: React.FC<Props> = ({
       {/* Only render children inline if NOT renderChildrenInParent */}
       {!renderChildrenInParent && selectedOptionsForChildren.length > 0 && (
         <ChildrenContainer placement="column">
-          {selectedOptionsForChildren.map((selectedOpt) => (
-            selectedOpt.children && selectedOpt.children.length > 0 && (
-              <div key={selectedOpt.id} style={{ marginTop: '15px' }}>
-                <div style={{ 
-                  fontWeight: 'bold', 
-                  marginBottom: '10px',
-                  color: '#333',
-                  fontSize: '14px'
-                }}>
-                  {selectedOpt.label} Options:
+          {selectedOptionsForChildren.map((selectedOpt) => {
+            const sortedChildren = selectedOpt.children ? sortFieldsByOrder(selectedOpt.children) : [];
+            
+            return (
+              sortedChildren.length > 0 && (
+                <div key={selectedOpt.id} style={{ marginTop: '15px' }}>
+                  <div style={{ 
+                    fontWeight: 'bold', 
+                    marginBottom: '10px',
+                    color: '#333',
+                    fontSize: '14px'
+                  }}>
+                    {selectedOpt.label} Options:
+                  </div>
+                  <ChildrenContainer placement={selectedOpt.placement || "column"}>
+                    {sortedChildren.map((child) => (
+                      <BlockWrapper key={child.id} level={level + 1}>
+                        <PreviewRenderer
+                          field={child}
+                          block={block}
+                          level={level + 1}
+                          parentSelected={parentSelected && selectedValues.length > 0}
+                          isSubmitted={isSubmitted}
+                          selectedOptions={selectedOptions}
+                          checkedOptions={checkedOptions}
+                          fieldValues={fieldValues}
+                          clearedFields={clearedFields}
+                          multiSelectValues={multiSelectValues}
+                          setSelectedOptions={setSelectedOptions}
+                          setCheckedOptions={setCheckedOptions}
+                          setFieldValues={setFieldValues}
+                          setClearedFields={setClearedFields}
+                          setMultiSelectValues={setMultiSelectValues}
+                        />
+                      </BlockWrapper>
+                    ))}
+                  </ChildrenContainer>
                 </div>
-                <ChildrenContainer placement={selectedOpt.placement || "column"}>
-                  {selectedOpt.children.map((child) => (
-                    <BlockWrapper key={child.id} level={level + 1}>
-                      <PreviewRenderer
-                        field={child}
-                        block={block}
-                        level={level + 1}
-                        parentSelected={parentSelected && selectedValues.length > 0}
-                        isSubmitted={isSubmitted}
-                        selectedOptions={selectedOptions}
-                        checkedOptions={checkedOptions}
-                        fieldValues={fieldValues}
-                        clearedFields={clearedFields}
-                        multiSelectValues={multiSelectValues}
-                        setSelectedOptions={setSelectedOptions}
-                        setCheckedOptions={setCheckedOptions}
-                        setFieldValues={setFieldValues}
-                        setClearedFields={setClearedFields}
-                        setMultiSelectValues={setMultiSelectValues}
-                      />
-                    </BlockWrapper>
-                  ))}
-                </ChildrenContainer>
-              </div>
-            )
-          ))}
+              )
+            );
+          })}
         </ChildrenContainer>
       )}
     </>

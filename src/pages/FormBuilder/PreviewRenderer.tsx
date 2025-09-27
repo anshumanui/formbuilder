@@ -61,36 +61,45 @@ const PreviewRenderer: React.FC<Props> = ({
     multiSelectValues
   );
 
+  // Sort children based on order property
+  const sortFieldsByOrder = (fields: Field[]): Field[] => {
+    return [...fields].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+  };
+
   // Get children from selected options for top-level fields
   const getTopLevelChildren = () => {
     if (level !== 0) return [];
     
+    let children: Field[] = [];
+    
     if (field.type === "radio") {
       const selectedOptionId = selectedOptions[field.id];
       const selectedOption = field.options?.find(opt => opt.id === selectedOptionId);
-      return selectedOption?.children || [];
+      children = selectedOption?.children || [];
     }
-    
-    if (field.type === "checkbox") {
-      return field.options?.flatMap(opt => 
+    else if (field.type === "checkbox") {
+      children = field.options?.flatMap(opt => 
         checkedOptions[opt.id] ? (opt.children || []) : []
       ) || [];
     }
-    
-    if (field.type === "select") {
+    else if (field.type === "select") {
       const selectedValue = fieldValues[field.id];
       const selectedOption = field.options?.find(opt => opt.key === selectedValue);
-      return selectedOption?.children || [];
+      children = selectedOption?.children || [];
     }
-
-    if (field.type === "multiselect") {
+    else if (field.type === "multiselect") {
       const selectedValues = multiSelectValues[field.id] || [];
-      return field.options?.flatMap(opt => 
+      children = field.options?.flatMap(opt => 
         selectedValues.includes(opt.key) ? (opt.children || []) : []
       ) || [];
     }
     
-    return [];
+    // Sort children by order
+    return sortFieldsByOrder(children);
   };
 
   const topLevelChildren = getTopLevelChildren();
@@ -102,7 +111,12 @@ const PreviewRenderer: React.FC<Props> = ({
         blockElement={field.blockElement}
         separate={level === 0 && block.separateBlock}
       >
-        {field.label && <PreviewLabel>{field.label}</PreviewLabel>}
+        {field.label && (
+          <PreviewLabel>
+            {block.displayOrdering && typeof field.order === "number" && `${field.order}. `}
+            {field.label}
+          </PreviewLabel>
+        )}
 
         {field.type === "text" && fieldValues && setFieldValues && setClearedFields && (
           <TextFieldPreview
