@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import type { Block } from "./types";
-import { idGenerator, generateKeyFromLabel, cleanBlockForExport, generateUserResponseJSON, mapUserResponseToFormState } from "./helpers";
-import { FORM_CONFIG } from "./config";
+import { idGenerator, generateKeyFromLabel, cleanBlockForExport, generateUserResponseJSON } from "./helpers";
 import FieldEditor from "./FieldEditor";
 import PreviewRenderer from "./PreviewRenderer";
+import FileOperations from "./components/FileOperations";
 import { Container, BuilderPanel, PreviewPanel, SectionTitle, Button } from "../../assets/Main.styled";
 
 const FormBuilder: React.FC = () => {
   const [block, setBlock] = useState<Block>({
     id: idGenerator(),
     separateBlock: false,
-    displayOrdering: false, // Initialize displayOrdering
+    displayOrdering: false,
     field: {
       id: idGenerator(),
       type: "radio",
@@ -52,22 +52,10 @@ const FormBuilder: React.FC = () => {
     }
   }, [block, selectedOptions]);
 
-  // TODO: Replace FORM_CONFIG with API call
-  // useEffect(() => {
-  //   // Fetch form configuration from API
-  //   // fetch('/api/form-config')
-  //   //   .then(response => response.json())
-  //   //   .then(config => {
-  //   //     // Update FORM_CONFIG.showValidationErrors = config.showValidationErrors
-  //   //   });
-  // }, []);
-
   const handleSubmit = () => {
     setIsSubmitted(true);
-    // Reset cleared fields to show errors for all required fields
     setClearedFields({});
     
-    // Generate user response JSON
     const userResponse = generateUserResponseJSON(
       block,
       selectedOptions,
@@ -89,174 +77,23 @@ const FormBuilder: React.FC = () => {
     setUserResponseJSON({});
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const jsonData = JSON.parse(text);
-      
-      // Validate the JSON structure
-      if (jsonData && jsonData.field && jsonData.field.id) {
-        // Reset form state
-        setIsSubmitted(false);
-        setClearedFields({});
-        setSelectedOptions({});
-        setCheckedOptions({});
-        setFieldValues({});
-        setMultiSelectValues({});
-        setUserResponseJSON({});
-        
-        // Load the new form structure
-        setBlock(jsonData);
-        
-        // Initialize radio selections if needed
-        if (jsonData.field.type === "radio" && jsonData.field.options?.length > 0) {
-          setSelectedOptions({ [jsonData.field.id]: jsonData.field.options[0].id });
-        }
-        
-        alert("Form loaded successfully!");
-      } else {
-        alert("Invalid JSON structure. Please ensure it contains a valid form configuration.");
-      }
-    } catch (error) {
-      alert("Error reading file. Please ensure it's a valid JSON file.");
-      console.error("File reading error:", error);
-    }
-    
-    // Reset file input
-    event.target.value = '';
-  };
-
-  const handleLoadFromFile = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const jsonData = JSON.parse(text);
-        
-        // Validate the JSON structure
-        if (jsonData && jsonData.field && jsonData.field.id) {
-          // Reset form state
-          setIsSubmitted(false);
-          setClearedFields({});
-          setSelectedOptions({});
-          setCheckedOptions({});
-          setFieldValues({});
-          setMultiSelectValues({});
-          setUserResponseJSON({});
-          
-          // Load the new form structure
-          setBlock(jsonData);
-          
-          // Initialize radio selections if needed
-          if (jsonData.field.type === "radio" && jsonData.field.options?.length > 0) {
-            setSelectedOptions({ [jsonData.field.id]: jsonData.field.options[0].id });
-          }
-          
-          alert("Form loaded successfully!");
-        } else {
-          alert("Invalid JSON structure. Please ensure it contains a valid form configuration.");
-        }
-      } catch (error) {
-        alert("Error reading file. Please ensure it's a valid JSON file.");
-        console.error("File reading error:", error);
-      }
-    };
-    input.click();
-  };
-
-  const handleExportJSON = () => {
-    const jsonData = cleanBlockForExport(block);
-    const dataStr = JSON.stringify(jsonData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `form-${block.id}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
-  const handleLoadUserResponse = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const userResponseData = JSON.parse(text);
-        
-        // Map user response to form state
-        const mappedState = mapUserResponseToFormState(block, userResponseData);
-        
-        // Apply the mapped state to the form
-        setSelectedOptions(mappedState.selectedOptions);
-        setCheckedOptions(mappedState.checkedOptions);
-        setFieldValues(mappedState.fieldValues);
-        setMultiSelectValues(mappedState.multiSelectValues);
-        
-        // Clear any existing errors and submission state
-        setIsSubmitted(false);
-        setClearedFields({});
-        
-        alert("User response loaded successfully!");
-      } catch (error) {
-        alert("Error reading user response file. Please ensure it's a valid JSON file.");
-        console.error("User response loading error:", error);
-      }
-    };
-    input.click();
-  };
-
-  const handleExportUserResponse = () => {
-    const dataStr = JSON.stringify(userResponseJSON, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `user-response-${block.id}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
   return (
     <Container>
       <BuilderPanel>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <SectionTitle style={{ margin: 0 }}>Form Builder</SectionTitle>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
-            {/* Form Configuration Buttons */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <Button onClick={handleLoadFromFile} style={{ background: '#e8f5e8', borderColor: '#4caf50', color: '#2e7d32', fontSize: '12px', padding: '4px 8px' }}>
-                Load Form JSON
-              </Button>
-              <Button onClick={handleExportJSON} style={{ background: '#e3f2fd', borderColor: '#2196f3', color: '#1976d2', fontSize: '12px', padding: '4px 8px' }}>
-                Export Form JSON
-              </Button>
-            </div>
-            
-            {/* User Response Buttons */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <Button onClick={handleLoadUserResponse} style={{ background: '#fff3e0', borderColor: '#ff9800', color: '#f57c00', fontSize: '12px', padding: '4px 8px' }}>
-                Load User Response
-              </Button>
-              <Button onClick={handleExportUserResponse} style={{ background: '#fce4ec', borderColor: '#e91e63', color: '#c2185b', fontSize: '12px', padding: '4px 8px' }}>
-                Export User Response
-              </Button>
-            </div>
-          </div>
+          <FileOperations
+            block={block}
+            setBlock={setBlock}
+            setSelectedOptions={setSelectedOptions}
+            setCheckedOptions={setCheckedOptions}
+            setFieldValues={setFieldValues}
+            setMultiSelectValues={setMultiSelectValues}
+            setIsSubmitted={setIsSubmitted}
+            setClearedFields={setClearedFields}
+            setUserResponseJSON={setUserResponseJSON}
+            userResponseJSON={userResponseJSON}
+          />
         </div>
 
         <FieldEditor
@@ -286,13 +123,8 @@ const FormBuilder: React.FC = () => {
         />
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-          <Button onClick={handleSubmit}>
-            Submit
-          </Button>
-          
-          <Button onClick={handleReset} style={{ background: '#f0f0f0' }}>
-            Reset
-          </Button>
+          <Button onClick={handleSubmit}>Submit</Button>
+          <Button onClick={handleReset} style={{ background: '#f0f0f0' }}>Reset</Button>
         </div>
 
         <SectionTitle>Form Structure JSON</SectionTitle>

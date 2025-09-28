@@ -1,11 +1,7 @@
 import React from "react";
 import type { Field, Block } from "./types";
 import { getErrorForField } from "./helpers";
-import {
-  BlockWrapper,
-  FieldContainer,
-  PreviewLabel,
-} from "../../assets/Main.styled";
+import { BlockWrapper, PreviewLabel } from "../../assets/Main.styled";
 
 import TextFieldPreview from "./fields/TextFieldPreview";
 import TextareaPreview from "./fields/TextareaPreview";
@@ -98,11 +94,90 @@ const PreviewRenderer: React.FC<Props> = ({
       ) || [];
     }
     
-    // Sort children by order
     return sortFieldsByOrder(children);
   };
 
   const topLevelChildren = getTopLevelChildren();
+  const commonProps = {
+    field,
+    block,
+    level,
+    isSubmitted,
+    selectedOptions,
+    checkedOptions,
+    fieldValues,
+    clearedFields,
+    multiSelectValues,
+    setSelectedOptions: setSelectedOptions!,
+    setCheckedOptions: setCheckedOptions!,
+    setFieldValues: setFieldValues!,
+    setClearedFields: setClearedFields!,
+    setMultiSelectValues: setMultiSelectValues!,
+    error,
+    renderChildrenInParent: level === 0 && block.separateBlock,
+  };
+
+  const renderFieldByType = () => {
+    switch (field.type) {
+      case "text":
+        return fieldValues && setFieldValues && setClearedFields && (
+          <TextFieldPreview
+            field={field}
+            block={block}
+            fieldValues={fieldValues}
+            setFieldValues={setFieldValues}
+            setClearedFields={setClearedFields}
+            error={error}
+          />
+        );
+
+      case "textarea":
+        return fieldValues && setFieldValues && setClearedFields && (
+          <TextareaPreview
+            field={field}
+            block={block}
+            fieldValues={fieldValues}
+            setFieldValues={setFieldValues}
+            setClearedFields={setClearedFields}
+            error={error}
+          />
+        );
+
+      case "numeric":
+        return fieldValues && setFieldValues && setClearedFields && (
+          <NumericFieldPreview
+            field={field}
+            block={block}
+            fieldValues={fieldValues}
+            setFieldValues={setFieldValues}
+            setClearedFields={setClearedFields}
+            error={error}
+          />
+        );
+
+      case "select":
+        return <SelectPreview {...commonProps} />;
+
+      case "checkbox":
+        return <CheckboxPreview {...commonProps} />;
+
+      case "radio":
+        return <RadioPreview {...commonProps} />;
+
+      case "multiselect":
+        return multiSelectValues && setMultiSelectValues && (
+          <MultiSelectPreview
+            {...commonProps}
+            parentSelected={parentSelected}
+            multiSelectValues={multiSelectValues}
+            setMultiSelectValues={setMultiSelectValues}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <>
@@ -118,123 +193,7 @@ const PreviewRenderer: React.FC<Props> = ({
           </PreviewLabel>
         )}
 
-        {field.type === "text" && fieldValues && setFieldValues && setClearedFields && (
-          <TextFieldPreview
-            field={field}
-            block={block}
-            fieldValues={fieldValues}
-            setFieldValues={setFieldValues}
-            setClearedFields={setClearedFields}
-            error={error}
-          />
-        )}
-
-        {field.type === "textarea" && fieldValues && setFieldValues && setClearedFields && (
-          <TextareaPreview
-            field={field}
-            block={block}
-            fieldValues={fieldValues}
-            setFieldValues={setFieldValues}
-            setClearedFields={setClearedFields}
-            error={error}
-          />
-        )}
-
-        {field.type === "numeric" && fieldValues && setFieldValues && setClearedFields && (
-          <NumericFieldPreview
-            field={field}
-            block={block}
-            fieldValues={fieldValues}
-            setFieldValues={setFieldValues}
-            setClearedFields={setClearedFields}
-            error={error}
-          />
-        )}
-
-        {field.type === "select" && (
-          <SelectPreview
-            field={field}
-            block={block}
-            level={level}
-            fieldValues={fieldValues}
-            setFieldValues={setFieldValues!}
-            setClearedFields={setClearedFields!}
-            isSubmitted={isSubmitted}
-            selectedOptions={selectedOptions}
-            checkedOptions={checkedOptions}
-            clearedFields={clearedFields}
-            multiSelectValues={multiSelectValues}
-            setSelectedOptions={setSelectedOptions!}
-            setCheckedOptions={setCheckedOptions!}
-            setMultiSelectValues={setMultiSelectValues!}
-            error={error}
-            renderChildrenInParent={level === 0 && block.separateBlock}
-          />
-        )}
-
-        {field.type === "checkbox" && (
-          <CheckboxPreview
-            field={field}
-            block={block}
-            level={level}
-            checkedOptions={checkedOptions}
-            setCheckedOptions={setCheckedOptions!}
-            setClearedFields={setClearedFields!}
-            isSubmitted={isSubmitted}
-            selectedOptions={selectedOptions}
-            fieldValues={fieldValues}
-            clearedFields={clearedFields}
-            multiSelectValues={multiSelectValues}
-            setSelectedOptions={setSelectedOptions!}
-            setFieldValues={setFieldValues!}
-            setMultiSelectValues={setMultiSelectValues!}
-            error={error}
-            renderChildrenInParent={level === 0 && block.separateBlock}
-          />
-        )}
-
-        {field.type === "radio" && (
-          <RadioPreview
-            field={field}
-            block={block}
-            level={level}
-            selectedOptions={selectedOptions}
-            setSelectedOptions={setSelectedOptions!}
-            setClearedFields={setClearedFields!}
-            isSubmitted={isSubmitted}
-            checkedOptions={checkedOptions}
-            fieldValues={fieldValues}
-            clearedFields={clearedFields}
-            multiSelectValues={multiSelectValues}
-            setCheckedOptions={setCheckedOptions!}
-            setFieldValues={setFieldValues!}
-            setMultiSelectValues={setMultiSelectValues!}
-            error={error}
-            renderChildrenInParent={level === 0 && block.separateBlock}
-          />
-        )}
-
-        {field.type === "multiselect" && multiSelectValues && setMultiSelectValues && (
-          <MultiSelectPreview
-            field={field}
-            block={block}
-            level={level}
-            parentSelected={parentSelected}
-            multiSelectValues={multiSelectValues}
-            setMultiSelectValues={setMultiSelectValues}
-            setClearedFields={setClearedFields!}
-            isSubmitted={isSubmitted}
-            selectedOptions={selectedOptions}
-            checkedOptions={checkedOptions}
-            fieldValues={fieldValues}
-            clearedFields={clearedFields}
-            setSelectedOptions={setSelectedOptions!}
-            setCheckedOptions={setCheckedOptions!}
-            setFieldValues={setFieldValues!}
-            error={error}
-            renderChildrenInParent={level === 0 && block.separateBlock}
-          />
-        )}
+        {renderFieldByType()}
       </BlockWrapper>
 
       {/* Render top-level children separately if separateBlock is true */}

@@ -1,11 +1,10 @@
 import React from "react";
-import type { Field, Block, Option } from "../types";
+import type { Field, Block } from "../types";
 import PreviewRenderer from "../PreviewRenderer";
 import {
   OptionWrapper,
   ErrorHelper,
   ChildrenContainer,
-  OptionContainer,
 } from "../../../assets/Main.styled";
 
 interface Props {

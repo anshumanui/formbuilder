@@ -6,7 +6,6 @@ import {
   SelectInput,
   CheckboxInput,
   Button,
-  LabelBlock,
   OptionWrapper,
   OptionActions,
   RemoveChildWrapper,
@@ -72,7 +71,7 @@ const FieldEditor: React.FC<FieldEditorProps> = ({ field, level, block, onChange
       />
 
       {level === 0 && (
-        <LabelBlock>
+        <div>
           <CheckboxInput
             type="checkbox"
             checked={block.separateBlock || false}
@@ -81,7 +80,7 @@ const FieldEditor: React.FC<FieldEditorProps> = ({ field, level, block, onChange
             }
           />
           Show children in separate block
-        </LabelBlock>
+        </div>
       )}
 
       <InputLabel>Type</InputLabel>
