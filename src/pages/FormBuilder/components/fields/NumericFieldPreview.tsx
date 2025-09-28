@@ -1,24 +1,19 @@
 import React from "react";
-import type { Field, Block } from "../types";
-import { ErrorHelper, FlexRow, SmallIcon } from "../../../assets/Main.styled";
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from "../../../../store";
+import { setFieldValue, setClearedField } from "../../../../store/slices/formSlice";
+import type { Field, Block } from "../../../../types";
+import { ErrorHelper, FlexRow, SmallIcon } from "../../../../assets/Components.styled";
 
 interface Props {
   field: Field;
   block: Block;
-  fieldValues: Record<string, string>;
-  setFieldValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setClearedFields: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   error?: string | null;
 }
 
-const NumericFieldPreview: React.FC<Props> = ({
-  field,
-  block: _block,
-  fieldValues,
-  setFieldValues,
-  setClearedFields,
-  error,
-}) => {
+const NumericFieldPreview: React.FC<Props> = ({ field, error }) => {
+  const dispatch = useDispatch();
+  const { fieldValues } = useSelector((state: RootState) => state.form);
   const value = fieldValues[field.id] || "";
   const dp = field.decimalPoints ?? 0;
 
@@ -38,8 +33,8 @@ const NumericFieldPreview: React.FC<Props> = ({
         onChange={(e) => {
           const newValue = e.target.value;
           if (regexMap[dp].test(newValue)) {
-            setFieldValues((prev) => ({ ...prev, [field.id]: newValue }));
-            setClearedFields((prev) => ({ ...prev, [field.id]: true }));
+            dispatch(setFieldValue({ fieldId: field.id, value: newValue }));
+            dispatch(setClearedField({ fieldId: field.id }));
           }
         }}
       />

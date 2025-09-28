@@ -1,4 +1,4 @@
-import type { Block, Field } from "./types";
+import type { Block, Field } from "../types";
 import { FORM_CONFIG } from "./config";
 
 export const idGenerator = () => Math.random().toString(36).slice(2, 10);

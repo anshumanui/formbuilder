@@ -1,10 +1,10 @@
 import React from "react";
-import type { Field } from "../types";
+import type { Field } from "../../../types";
 import {
   InputLabel,
   TextInput,
   SelectInput,
-} from "../../../assets/Main.styled";
+} from "../../../assets/Components.styled";
 
 interface Props {
   field: Field;

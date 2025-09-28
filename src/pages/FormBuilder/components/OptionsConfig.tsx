@@ -1,7 +1,7 @@
 import React from "react";
-import type { Field, Option, Block } from "../types";
-import { generateKeyFromLabel, idGenerator } from "../helpers";
-import FieldEditor from "../FieldEditor";
+import type { Field, Option, Block } from "../../../types";
+import { generateKeyFromLabel, idGenerator } from "../../../utils/helpers";
+import FieldEditor from "./FieldEditor";
 import {
   InputLabel,
   TextInput,
@@ -11,14 +11,14 @@ import {
   OptionActions,
   RemoveChildWrapper,
   RemoveButton,
-} from "../../../assets/Main.styled";
+} from "../../../assets/Components.styled";
 
 interface Props {
   field: Field;
   onChange: (updated: Field) => void;
   level: number;
   block: Block;
-  setBlock: React.Dispatch<React.SetStateAction<Block>>;
+  setBlock: (block: Block) => void;
 }
 
 const OptionsConfig: React.FC<Props> = ({ field, onChange, level, block, setBlock }) => {
@@ -146,7 +146,6 @@ const OptionsConfig: React.FC<Props> = ({ field, onChange, level, block, setBloc
                 onChange={(updated) => updateChildField(opt.id, childIdx, updated)}
                 level={level + 1}
                 block={block}
-                setBlock={setBlock}
               />
               <RemoveButton 
                 type="button" 

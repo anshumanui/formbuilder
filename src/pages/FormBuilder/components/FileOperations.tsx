@@ -1,41 +1,25 @@
 import React from "react";
-import type { Block } from "../types";
-import { cleanBlockForExport, mapUserResponseToFormState } from "../helpers";
-import { Button } from "../../../assets/Main.styled";
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from "../../../store";
+import { 
+  setBlock, 
+  setSelectedOption, 
+  resetForm, 
+  setAllFormStates 
+} from "../../../store/slices/formSlice";
+import { cleanBlockForExport, mapUserResponseToFormState } from "../../../utils/helpers";
+import { 
+  FileOperationsContainer,
+  FileOperationsRow,
+  FileButton
+} from "../../../assets/Components.styled";
 
-interface Props {
-  block: Block;
-  setBlock: React.Dispatch<React.SetStateAction<Block>>;
-  setSelectedOptions: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setCheckedOptions: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  setFieldValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setMultiSelectValues: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
-  setIsSubmitted: React.Dispatch<React.SetStateAction<boolean>>;
-  setClearedFields: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  setUserResponseJSON: React.Dispatch<React.SetStateAction<any>>;
-  userResponseJSON: any;
-}
+const FileOperations: React.FC = () => {
+  const dispatch = useDispatch();
+  const { block, userResponseJSON } = useSelector((state: RootState) => state.form);
 
-const FileOperations: React.FC<Props> = ({
-  block,
-  setBlock,
-  setSelectedOptions,
-  setCheckedOptions,
-  setFieldValues,
-  setMultiSelectValues,
-  setIsSubmitted,
-  setClearedFields,
-  setUserResponseJSON,
-  userResponseJSON,
-}) => {
   const resetFormState = () => {
-    setIsSubmitted(false);
-    setClearedFields({});
-    setSelectedOptions({});
-    setCheckedOptions({});
-    setFieldValues({});
-    setMultiSelectValues({});
-    setUserResponseJSON({});
+    dispatch(resetForm());
   };
 
   const handleLoadFromFile = () => {
@@ -52,11 +36,14 @@ const FileOperations: React.FC<Props> = ({
         
         if (jsonData && jsonData.field && jsonData.field.id) {
           resetFormState();
-          setBlock(jsonData);
+          dispatch(setBlock(jsonData));
           
           // Initialize radio selections if needed
           if (jsonData.field.type === "radio" && jsonData.field.options?.length > 0) {
-            setSelectedOptions({ [jsonData.field.id]: jsonData.field.options[0].id });
+            dispatch(setSelectedOption({ 
+              fieldId: jsonData.field.id, 
+              optionId: jsonData.field.options[0].id 
+            }));
           }
           
           alert("Form loaded successfully!");
@@ -98,13 +85,12 @@ const FileOperations: React.FC<Props> = ({
         
         const mappedState = mapUserResponseToFormState(block, userResponseData);
         
-        setSelectedOptions(mappedState.selectedOptions);
-        setCheckedOptions(mappedState.checkedOptions);
-        setFieldValues(mappedState.fieldValues);
-        setMultiSelectValues(mappedState.multiSelectValues);
-        
-        setIsSubmitted(false);
-        setClearedFields({});
+        dispatch(setAllFormStates({
+          selectedOptions: mappedState.selectedOptions,
+          checkedOptions: mappedState.checkedOptions,
+          fieldValues: mappedState.fieldValues,
+          multiSelectValues: mappedState.multiSelectValues
+        }));
         
         alert("User response loaded successfully!");
       } catch (error) {
@@ -128,63 +114,39 @@ const FileOperations: React.FC<Props> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
+    <FileOperationsContainer>
       {/* Form Configuration Buttons */}
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <Button 
-          onClick={handleLoadFromFile} 
-          style={{ 
-            background: '#e8f5e8', 
-            borderColor: '#4caf50', 
-            color: '#2e7d32', 
-            fontSize: '12px', 
-            padding: '4px 8px' 
-          }}
+      <FileOperationsRow>
+        <FileButton 
+          $variant="load"
+          onClick={handleLoadFromFile}
         >
           Load Form JSON
-        </Button>
-        <Button 
-          onClick={handleExportJSON} 
-          style={{ 
-            background: '#e3f2fd', 
-            borderColor: '#2196f3', 
-            color: '#1976d2', 
-            fontSize: '12px', 
-            padding: '4px 8px' 
-          }}
+        </FileButton>
+        <FileButton 
+          $variant="export"
+          onClick={handleExportJSON}
         >
           Export Form JSON
-        </Button>
-      </div>
+        </FileButton>
+      </FileOperationsRow>
       
       {/* User Response Buttons */}
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <Button 
-          onClick={handleLoadUserResponse} 
-          style={{ 
-            background: '#fff3e0', 
-            borderColor: '#ff9800', 
-            color: '#f57c00', 
-            fontSize: '12px', 
-            padding: '4px 8px' 
-          }}
+      <FileOperationsRow>
+        <FileButton 
+          $variant="userLoad"
+          onClick={handleLoadUserResponse}
         >
           Load User Response
-        </Button>
-        <Button 
-          onClick={handleExportUserResponse} 
-          style={{ 
-            background: '#fce4ec', 
-            borderColor: '#e91e63', 
-            color: '#c2185b', 
-            fontSize: '12px', 
-            padding: '4px 8px' 
-          }}
+        </FileButton>
+        <FileButton 
+          $variant="userExport"
+          onClick={handleExportUserResponse}
         >
           Export User Response
-        </Button>
-      </div>
-    </div>
+        </FileButton>
+      </FileOperationsRow>
+    </FileOperationsContainer>
   );
 };
 

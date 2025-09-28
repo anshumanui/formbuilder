@@ -1,12 +1,12 @@
 import React from "react";
-import type { Field } from "../types";
-import { generateKeyFromLabel } from "../helpers";
+import type { Field } from "../../../types";
+import { generateKeyFromLabel } from "../../../utils/helpers";
 import {
   InputLabel,
   TextInput,
   SelectInput,
   CheckboxInput,
-} from "../../../assets/Main.styled";
+} from "../../../assets/Components.styled";
 
 interface Props {
   field: Field;

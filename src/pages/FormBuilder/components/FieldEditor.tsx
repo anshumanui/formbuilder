@@ -1,24 +1,33 @@
 import React from "react";
-import type { Field, Block } from "./types";
-import FieldConfig from "./components/FieldConfig";
-import InputFieldConfig from "./components/InputFieldConfig";
-import OptionsConfig from "./components/OptionsConfig";
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from "../../../store";
+import { setBlock } from "../../../store/slices/formSlice";
+import type { Field, Block } from "../../../types";
+import FieldConfig from "./FieldConfig";
+import InputFieldConfig from "./InputFieldConfig";
+import OptionsConfig from "./OptionsConfig";
 import {
   FieldContainer,
   CheckboxInput,
-} from "../../assets/Main.styled";
+} from "../../../assets/Components.styled";
 
 interface Props {
   field: Field;
   onChange: (updated: Field) => void;
   level: number;
   block: Block;
-  setBlock: React.Dispatch<React.SetStateAction<Block>>;
 }
 
-const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock }) => {
+const FieldEditor: React.FC<Props> = ({ field, onChange, level }) => {
+  const dispatch = useDispatch();
+  const { block } = useSelector((state: RootState) => state.form);
+
+  const handleBlockChange = (updatedBlock: Block) => {
+    dispatch(setBlock(updatedBlock));
+  };
+
   return (
-    <FieldContainer level={level}>
+    <FieldContainer $level={level}>
       {/* Only top-level: Block configuration */}
       {level === 0 && (
         <>
@@ -26,7 +35,7 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
             <CheckboxInput
               type="checkbox"
               checked={block.separateBlock}
-              onChange={(e) => setBlock({ ...block, separateBlock: e.target.checked })}
+              onChange={(e) => handleBlockChange({ ...block, separateBlock: e.target.checked })}
             />
             Render as Separate Block?
           </label>
@@ -35,7 +44,7 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
             <CheckboxInput
               type="checkbox"
               checked={block.displayOrdering || false}
-              onChange={(e) => setBlock({ ...block, displayOrdering: e.target.checked })}
+              onChange={(e) => handleBlockChange({ ...block, displayOrdering: e.target.checked })}
             />
             Display Ordering?
           </label>
@@ -54,7 +63,7 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block, setBlock 
         onChange={onChange} 
         level={level} 
         block={block} 
-        setBlock={setBlock} 
+        setBlock={handleBlockChange}
       />
     </FieldContainer>
   );

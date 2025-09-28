@@ -1,7 +1,9 @@
 import React from "react";
-import type { Field, Block } from "./types";
-import { getErrorForField } from "./helpers";
-import { BlockWrapper, PreviewLabel } from "../../assets/Main.styled";
+import { useSelector } from 'react-redux';
+import type { RootState } from "../../../store";
+import type { Field, Block } from "../../../types";
+import { getErrorForField } from "../../../utils/helpers";
+import { BlockWrapper, PreviewLabel } from "../../../assets/Components.styled";
 
 import TextFieldPreview from "./fields/TextFieldPreview";
 import TextareaPreview from "./fields/TextareaPreview";
@@ -16,17 +18,6 @@ interface Props {
   block: Block;
   level?: number;
   parentSelected?: boolean;
-  isSubmitted: boolean;
-  selectedOptions: Record<string, string>;
-  checkedOptions: Record<string, boolean>;
-  fieldValues: Record<string, string>;
-  clearedFields: Record<string, boolean>;
-  multiSelectValues: Record<string, string[]>;
-  setSelectedOptions?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setCheckedOptions?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  setFieldValues?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setClearedFields?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  setMultiSelectValues?: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
 }
 
 const PreviewRenderer: React.FC<Props> = ({
@@ -34,18 +25,16 @@ const PreviewRenderer: React.FC<Props> = ({
   block,
   level = 0,
   parentSelected = true,
-  isSubmitted,
-  selectedOptions,
-  checkedOptions,
-  fieldValues,
-  clearedFields,
-  multiSelectValues,
-  setSelectedOptions,
-  setCheckedOptions,
-  setFieldValues,
-  setClearedFields,
-  setMultiSelectValues,
 }) => {
+  const {
+    isSubmitted,
+    selectedOptions,
+    checkedOptions,
+    fieldValues,
+    clearedFields,
+    multiSelectValues
+  } = useSelector((state: RootState) => state.form);
+
   const error = getErrorForField(
     field,
     parentSelected,
@@ -102,17 +91,6 @@ const PreviewRenderer: React.FC<Props> = ({
     field,
     block,
     level,
-    isSubmitted,
-    selectedOptions,
-    checkedOptions,
-    fieldValues,
-    clearedFields,
-    multiSelectValues,
-    setSelectedOptions: setSelectedOptions!,
-    setCheckedOptions: setCheckedOptions!,
-    setFieldValues: setFieldValues!,
-    setClearedFields: setClearedFields!,
-    setMultiSelectValues: setMultiSelectValues!,
     error,
     renderChildrenInParent: level === 0 && block.separateBlock,
   };
@@ -120,40 +98,13 @@ const PreviewRenderer: React.FC<Props> = ({
   const renderFieldByType = () => {
     switch (field.type) {
       case "text":
-        return fieldValues && setFieldValues && setClearedFields && (
-          <TextFieldPreview
-            field={field}
-            block={block}
-            fieldValues={fieldValues}
-            setFieldValues={setFieldValues}
-            setClearedFields={setClearedFields}
-            error={error}
-          />
-        );
+        return <TextFieldPreview {...commonProps} />;
 
       case "textarea":
-        return fieldValues && setFieldValues && setClearedFields && (
-          <TextareaPreview
-            field={field}
-            block={block}
-            fieldValues={fieldValues}
-            setFieldValues={setFieldValues}
-            setClearedFields={setClearedFields}
-            error={error}
-          />
-        );
+        return <TextareaPreview {...commonProps} />;
 
       case "numeric":
-        return fieldValues && setFieldValues && setClearedFields && (
-          <NumericFieldPreview
-            field={field}
-            block={block}
-            fieldValues={fieldValues}
-            setFieldValues={setFieldValues}
-            setClearedFields={setClearedFields}
-            error={error}
-          />
-        );
+        return <NumericFieldPreview {...commonProps} />;
 
       case "select":
         return <SelectPreview {...commonProps} />;
@@ -165,14 +116,7 @@ const PreviewRenderer: React.FC<Props> = ({
         return <RadioPreview {...commonProps} />;
 
       case "multiselect":
-        return multiSelectValues && setMultiSelectValues && (
-          <MultiSelectPreview
-            {...commonProps}
-            parentSelected={parentSelected}
-            multiSelectValues={multiSelectValues}
-            setMultiSelectValues={setMultiSelectValues}
-          />
-        );
+        return <MultiSelectPreview {...commonProps} parentSelected={parentSelected} />;
 
       default:
         return null;
@@ -182,9 +126,9 @@ const PreviewRenderer: React.FC<Props> = ({
   return (
     <>
       <BlockWrapper 
-        level={level} 
-        blockElement={field.blockElement}
-        separate={level === 0 && block.separateBlock}
+        $level={level} 
+        $blockElement={field.blockElement}
+        $separate={level === 0 && block.separateBlock}
       >
         {field.label && (
           <PreviewLabel>
@@ -198,7 +142,7 @@ const PreviewRenderer: React.FC<Props> = ({
 
       {/* Render top-level children separately if separateBlock is true */}
       {level === 0 && block.separateBlock && topLevelChildren.length > 0 && (
-        <BlockWrapper level={level + 1} separate>
+        <BlockWrapper $level={level + 1} $separate>
           {topLevelChildren.map((child) => (
             <PreviewRenderer
               key={child.id}
@@ -206,17 +150,6 @@ const PreviewRenderer: React.FC<Props> = ({
               block={block}
               level={level + 1}
               parentSelected={true}
-              isSubmitted={isSubmitted}
-              selectedOptions={selectedOptions}
-              checkedOptions={checkedOptions}
-              fieldValues={fieldValues}
-              clearedFields={clearedFields}
-              multiSelectValues={multiSelectValues}
-              setSelectedOptions={setSelectedOptions}
-              setCheckedOptions={setCheckedOptions}
-              setFieldValues={setFieldValues}
-              setClearedFields={setClearedFields}
-              setMultiSelectValues={setMultiSelectValues}
             />
           ))}
         </BlockWrapper>

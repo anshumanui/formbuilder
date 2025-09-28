@@ -1,27 +1,19 @@
 import React from "react";
-import type { Field, Block } from "../types";
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from "../../../../store";
+import { setCheckedOption, setClearedField } from "../../../../store/slices/formSlice";
+import type { Field, Block } from "../../../../types";
 import PreviewRenderer from "../PreviewRenderer";
 import {
   OptionWrapper,
   ErrorHelper,
   ChildrenContainer,
-} from "../../../assets/Main.styled";
+} from "../../../../assets/Components.styled";
 
 interface Props {
   field: Field;
   block: Block;
   level?: number;
-  checkedOptions: Record<string, boolean>;
-  setCheckedOptions: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  setClearedFields: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  isSubmitted: boolean;
-  selectedOptions: Record<string, string>;
-  fieldValues: Record<string, string>;
-  clearedFields: Record<string, boolean>;
-  multiSelectValues: Record<string, string[]>;
-  setSelectedOptions: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setFieldValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  setMultiSelectValues: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
   error?: string | null;
   renderChildrenInParent?: boolean;
 }
@@ -30,20 +22,12 @@ const CheckboxPreview: React.FC<Props> = ({
   field,
   block,
   level = 0,
-  checkedOptions,
-  setCheckedOptions,
-  setClearedFields,
-  isSubmitted,
-  selectedOptions,
-  fieldValues,
-  clearedFields,
-  multiSelectValues,
-  setSelectedOptions,
-  setFieldValues,
-  setMultiSelectValues,
   error,
   renderChildrenInParent = false,
 }) => {
+  const dispatch = useDispatch();
+  const { checkedOptions } = useSelector((state: RootState) => state.form);
+
   // Sort children based on order property
   const sortFieldsByOrder = (fields: Field[]): Field[] => {
     return [...fields].sort((a, b) => {
@@ -68,12 +52,8 @@ const CheckboxPreview: React.FC<Props> = ({
                 value={opt.key}
                 checked={isChecked}
                 onChange={() => {
-                  setCheckedOptions((prev) => ({
-                    ...prev,
-                    [opt.id]: !prev[opt.id],
-                  }));
-                  // Clear errors for this field when user makes selection
-                  setClearedFields(prev => ({ ...prev, [field.id]: true }));
+                  dispatch(setCheckedOption({ optionId: opt.id, value: !isChecked }));
+                  dispatch(setClearedField({ fieldId: field.id }));
                 }}
               />{" "}
               {opt.label}
@@ -82,7 +62,7 @@ const CheckboxPreview: React.FC<Props> = ({
             {/* Only render children inline if NOT renderChildrenInParent */}
             {!renderChildrenInParent &&
               isChecked && sortedChildren.length > 0 && (
-              <ChildrenContainer placement={opt.placement || "column"}>
+              <ChildrenContainer $placement={opt.placement || "column"}>
                 {sortedChildren.map((child) => (
                   <PreviewRenderer
                     key={child.id}
@@ -90,17 +70,6 @@ const CheckboxPreview: React.FC<Props> = ({
                     block={block}
                     level={level + 1}
                     parentSelected={isChecked}
-                    isSubmitted={isSubmitted}
-                    selectedOptions={selectedOptions}
-                    checkedOptions={checkedOptions}
-                    fieldValues={fieldValues}
-                    clearedFields={clearedFields}
-                    multiSelectValues={multiSelectValues}
-                    setSelectedOptions={setSelectedOptions}
-                    setCheckedOptions={setCheckedOptions}
-                    setFieldValues={setFieldValues}
-                    setClearedFields={setClearedFields}
-                    setMultiSelectValues={setMultiSelectValues}
                   />
                 ))}
               </ChildrenContainer>
