@@ -87,6 +87,7 @@ const PreviewRenderer: React.FC<Props> = ({
   };
 
   const topLevelChildren = getTopLevelChildren();
+  
   const commonProps = {
     field,
     block,

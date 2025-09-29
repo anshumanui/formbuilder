@@ -5,9 +5,11 @@ import { setCheckedOption, setClearedField } from "../../../../store/slices/form
 import type { Field, Block } from "../../../../types";
 import PreviewRenderer from "../PreviewRenderer";
 import {
-  OptionWrapper,
   ErrorHelper,
   ChildrenContainer,
+  OptionsContainer,
+  OptionLabel,
+  BlockWrapper
 } from "../../../../assets/Components.styled";
 
 interface Props {
@@ -39,44 +41,46 @@ const CheckboxPreview: React.FC<Props> = ({
 
   return (
     <>
-      {(field.options || []).map((opt) => {
-        const isChecked = !!checkedOptions[opt.id];
-        const sortedChildren = opt.children ? sortFieldsByOrder(opt.children) : [];
+      <OptionsContainer $placement={field.optionsPlacement || "column"}>
+        {(field.options || []).map((opt) => {
+          const isChecked = !!checkedOptions[opt.id];
+          const sortedChildren = opt.children ? sortFieldsByOrder(opt.children) : [];
 
-        return (
-          <OptionWrapper key={opt.id}>
-            <label>
-              <input
-                type="checkbox"
-                name={field.id}
-                value={opt.key}
-                checked={isChecked}
-                onChange={() => {
-                  dispatch(setCheckedOption({ optionId: opt.id, value: !isChecked }));
-                  dispatch(setClearedField({ fieldId: field.id }));
-                }}
-              />{" "}
-              {opt.label}
-            </label>
+          return (
+            <div key={opt.id}>
+              <OptionLabel $placement={field.optionsPlacement}>
+                <input
+                  type="checkbox"
+                  name={field.id}
+                  value={opt.key}
+                  checked={isChecked}
+                  onChange={() => {
+                    dispatch(setCheckedOption({ optionId: opt.id, value: !isChecked }));
+                    dispatch(setClearedField({ fieldId: field.id }));
+                  }}
+                />
+                {opt.label}
+              </OptionLabel>
 
-            {/* Only render children inline if NOT renderChildrenInParent */}
-            {!renderChildrenInParent &&
-              isChecked && sortedChildren.length > 0 && (
-              <ChildrenContainer $placement={opt.placement || "column"}>
-                {sortedChildren.map((child) => (
-                  <PreviewRenderer
-                    key={child.id}
-                    field={child}
-                    block={block}
-                    level={level + 1}
-                    parentSelected={isChecked}
-                  />
-                ))}
-              </ChildrenContainer>
-            )}
-          </OptionWrapper>
-        );
-      })}
+              {/* Only render children inline if renderChildrenInParent is FALSE */}
+              {!renderChildrenInParent && isChecked && sortedChildren.length > 0 && (
+                <ChildrenContainer $placement={opt.placement || "column"}>
+                  {sortedChildren.map((child) => (
+                    <BlockWrapper key={child.id} $level={level + 1}>
+                      <PreviewRenderer
+                        field={child}
+                        block={block}
+                        level={level + 1}
+                        parentSelected={isChecked}
+                      />
+                    </BlockWrapper>
+                  ))}
+                </ChildrenContainer>
+              )}
+            </div>
+          );
+        })}
+      </OptionsContainer>
       {error && <ErrorHelper>{error}</ErrorHelper>}
     </>
   );

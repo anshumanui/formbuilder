@@ -115,6 +115,15 @@ export const BlockWrapper = styled.div<{
   `}
 `;
 
+// NEW: Separate block for level > 0 (same as BlockWrapper but without box-shadow)
+export const SeparateBlockWrapper = styled.div`
+  background: #fff;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  /* No box-shadow for level > 0 separate blocks */
+`;
+
 export const PreviewLabel = styled.label<{ $mandatory?: boolean }>`
   font-weight: bold;
   display: block;
@@ -139,6 +148,24 @@ export const ChildrenContainer = styled.div<{ $placement: "row" | "column" }>`
   flex-wrap: ${(props) => (props.$placement === "row" ? "wrap" : "nowrap")};
   gap: 16px;
   margin-top: 8px;
+`;
+
+// Options Container for radio/checkbox layout
+export const OptionsContainer = styled.div<{ $placement: "row" | "column" }>`
+  display: flex;
+  flex-direction: ${(props) => (props.$placement === "row" ? "row" : "column")};
+  flex-wrap: ${(props) => (props.$placement === "row" ? "wrap" : "nowrap")};
+  gap: ${(props) => (props.$placement === "row" ? "16px" : "8px")};
+  margin-top: 8px;
+`;
+
+// Option Label for radio/checkbox items
+export const OptionLabel = styled.label<{ $placement?: "row" | "column" }>`
+  display: flex;
+  align-items: center;
+  ${(props) => props.$placement === "row" && css`
+    min-width: fit-content;
+  `}
 `;
 
 // Utility Components

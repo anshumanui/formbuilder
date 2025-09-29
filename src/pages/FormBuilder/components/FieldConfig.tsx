@@ -14,6 +14,9 @@ interface Props {
 }
 
 const FieldConfig: React.FC<Props> = ({ field, onChange }) => {
+  // Check if field type supports options placement
+  const hasOptionsPlacement = field.type === "radio" || field.type === "checkbox";
+
   return (
     <>
       {/* Label */}
@@ -39,6 +42,23 @@ const FieldConfig: React.FC<Props> = ({ field, onChange }) => {
         placeholder="Field display order (optional)"
         min="1"
       />
+
+      {/* NEW: Options Placement - Only for radio and checkbox */}
+      {hasOptionsPlacement && (
+        <>
+          <InputLabel>Options Placement</InputLabel>
+          <SelectInput
+            value={field.optionsPlacement || "column"}
+            onChange={(e) => onChange({ 
+              ...field, 
+              optionsPlacement: e.target.value as "row" | "column" 
+            })}
+          >
+            <option value="column">Column</option>
+            <option value="row">Row</option>
+          </SelectInput>
+        </>
+      )}
 
       {/* Field Type */}
       <InputLabel>Field Type</InputLabel>

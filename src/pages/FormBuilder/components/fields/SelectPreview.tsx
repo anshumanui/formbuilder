@@ -56,9 +56,8 @@ const SelectPreview: React.FC<Props> = ({
 
       {error && <ErrorHelper>{error}</ErrorHelper>}
 
-      {/* Only render children inline if NOT renderChildrenInParent */}
-      {!renderChildrenInParent &&
-        value && sortedChildren.length > 0 && (
+      {/* Only render children inline if renderChildrenInParent is FALSE */}
+      {!renderChildrenInParent && value && sortedChildren.length > 0 && (
         <ChildrenContainer $placement={selectedOpt?.placement || "column"}>
           {sortedChildren.map((child) => (
             <BlockWrapper key={child.id} $level={level + 1}>

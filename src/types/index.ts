@@ -7,6 +7,7 @@ export interface Field {
   key: string;
   value: string;
   order?: number;
+  optionsPlacement?: "row" | "column"; // For radio/checkbox options layout
   mandatory?: boolean;
   errorMessage?: string;
   placeholder?: string;
@@ -16,7 +17,8 @@ export interface Field {
   options?: Option[];
   decimalPoints?: 0 | 1 | 2;
   maxSelections?: number;
-  blockElement?: boolean;
+  blockElement?: boolean; // Makes element full width within parent
+  separateBlock?: boolean; // Renders children as separate block outside parent (for ANY field type at level > 0)
 }
 
 export interface Option {

@@ -1,6 +1,5 @@
 import React from "react";
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from "../../../store";
+import { useDispatch } from 'react-redux';
 import { setBlock } from "../../../store/slices/formSlice";
 import type { Field, Block } from "../../../types";
 import FieldConfig from "./FieldConfig";
@@ -18,9 +17,8 @@ interface Props {
   block: Block;
 }
 
-const FieldEditor: React.FC<Props> = ({ field, onChange, level }) => {
+const FieldEditor: React.FC<Props> = ({ field, onChange, level, block }) => {
   const dispatch = useDispatch();
-  const { block } = useSelector((state: RootState) => state.form);
 
   const handleBlockChange = (updatedBlock: Block) => {
     dispatch(setBlock(updatedBlock));

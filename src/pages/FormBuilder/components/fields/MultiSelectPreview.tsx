@@ -109,7 +109,7 @@ const MultiSelectPreview: React.FC<Props> = ({
 
       {error && <ErrorHelper>{error}</ErrorHelper>}
 
-      {/* Only render children inline if NOT renderChildrenInParent */}
+      {/* Only render children inline if renderChildrenInParent is FALSE */}
       {!renderChildrenInParent && selectedOptionsForChildren.length > 0 && (
         <ChildrenContainer $placement="column">
           {selectedOptionsForChildren.map((selectedOpt) => {

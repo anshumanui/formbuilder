@@ -22,6 +22,7 @@ export const cleanBlockForExport = (block: Block): any => {
     };
 
     if (typeof field.order === "number") cleaned.order = field.order;
+    if (field.optionsPlacement) cleaned.optionsPlacement = field.optionsPlacement;
     if (field.mandatory) cleaned.mandatory = true;
     if (field.errorMessage) cleaned.errorMessage = field.errorMessage;
     if (field.placeholder) cleaned.placeholder = field.placeholder;
@@ -31,6 +32,7 @@ export const cleanBlockForExport = (block: Block): any => {
     if (typeof field.decimalPoints === "number") cleaned.decimalPoints = field.decimalPoints;
     if (field.maxSelections) cleaned.maxSelections = field.maxSelections;
     if (field.blockElement) cleaned.blockElement = field.blockElement;
+    if (field.separateBlock) cleaned.separateBlock = field.separateBlock;
 
     if (field.options && field.options.length > 0) {
       cleaned.options = field.options
@@ -108,6 +110,7 @@ export const getErrorForField = (
   }
 };
 
+// UPDATED: Generate user response JSON with ALL fields and options
 export const generateUserResponseJSON = (
   block: Block,
   selectedOptions: Record<string, string>,
@@ -121,38 +124,40 @@ export const generateUserResponseJSON = (
     
     if (field.type === "radio") {
       const selectedOptionId = selectedOptions[field.id];
-      const selectedOption = field.options?.find(opt => opt.id === selectedOptionId);
       
-      if (selectedOption) {
-        response[selectedOption.key] = { selected: true };
+      // Include ALL options with selected: true/false
+      field.options?.forEach(option => {
+        const isSelected = option.id === selectedOptionId;
+        response[option.key] = { selected: isSelected };
         
-        if (selectedOption.children && selectedOption.children.length > 0) {
-          selectedOption.children.forEach(child => {
+        // Process children for selected option
+        if (option.children && option.children.length > 0) {
+          option.children.forEach(child => {
             const childResponse = buildFieldResponse(child);
             if (Object.keys(childResponse).length > 0) {
-              Object.assign(response[selectedOption.key], childResponse);
+              Object.assign(response[option.key], childResponse);
             }
           });
         }
-      }
+      });
     }
     
     else if (field.type === "checkbox") {
       const checkboxResponse: any = {};
       
+      // Include ALL options with selected: true/false
       field.options?.forEach(option => {
-        const isChecked = checkedOptions[option.id];
-        if (isChecked) {
-          checkboxResponse[option.key] = { selected: true };
-          
-          if (option.children && option.children.length > 0) {
-            option.children.forEach(child => {
-              const childResponse = buildFieldResponse(child);
-              if (Object.keys(childResponse).length > 0) {
-                Object.assign(checkboxResponse[option.key], childResponse);
-              }
-            });
-          }
+        const isChecked = checkedOptions[option.id] || false;
+        checkboxResponse[option.key] = { selected: isChecked };
+        
+        // Process children for checked option
+        if (option.children && option.children.length > 0) {
+          option.children.forEach(child => {
+            const childResponse = buildFieldResponse(child);
+            if (Object.keys(childResponse).length > 0) {
+              Object.assign(checkboxResponse[option.key], childResponse);
+            }
+          });
         }
       });
       
@@ -163,39 +168,41 @@ export const generateUserResponseJSON = (
     
     else if (field.type === "select") {
       const selectedValue = fieldValues[field.id];
-      const selectedOption = field.options?.find(opt => opt.key === selectedValue);
       
-      if (selectedOption) {
-        response[selectedOption.key] = { selected: true };
+      // Include ALL options with selected: true/false
+      field.options?.forEach(option => {
+        const isSelected = option.key === selectedValue;
+        response[option.key] = { selected: isSelected };
         
-        if (selectedOption.children && selectedOption.children.length > 0) {
-          selectedOption.children.forEach(child => {
+        // Process children for selected option
+        if (option.children && option.children.length > 0) {
+          option.children.forEach(child => {
             const childResponse = buildFieldResponse(child);
             if (Object.keys(childResponse).length > 0) {
-              Object.assign(response[selectedOption.key], childResponse);
+              Object.assign(response[option.key], childResponse);
             }
           });
         }
-      }
+      });
     }
 
     else if (field.type === "multiselect") {
       const selectedValues = multiSelectValues[field.id] || [];
       const multiselectResponse: any = {};
       
-      selectedValues.forEach(selectedValue => {
-        const selectedOption = field.options?.find(opt => opt.key === selectedValue);
-        if (selectedOption) {
-          multiselectResponse[selectedOption.key] = { selected: true };
-          
-          if (selectedOption.children && selectedOption.children.length > 0) {
-            selectedOption.children.forEach(child => {
-              const childResponse = buildFieldResponse(child);
-              if (Object.keys(childResponse).length > 0) {
-                Object.assign(multiselectResponse[selectedOption.key], childResponse);
-              }
-            });
-          }
+      // Include ALL options with selected: true/false
+      field.options?.forEach(option => {
+        const isSelected = selectedValues.includes(option.key);
+        multiselectResponse[option.key] = { selected: isSelected };
+        
+        // Process children for selected option
+        if (option.children && option.children.length > 0) {
+          option.children.forEach(child => {
+            const childResponse = buildFieldResponse(child);
+            if (Object.keys(childResponse).length > 0) {
+              Object.assign(multiselectResponse[option.key], childResponse);
+            }
+          });
         }
       });
       
@@ -204,11 +211,10 @@ export const generateUserResponseJSON = (
       }
     }
     
+    // UPDATED: Input fields - show key with value or empty string
     else if (field.type === "text" || field.type === "textarea" || field.type === "numeric") {
       const value = fieldValues[field.id];
-      if (value && value.trim() !== "") {
-        response[field.key] = value;
-      }
+      response[field.key] = value && value.trim() !== "" ? value : "";
     }
     
     return response;
