@@ -8,7 +8,6 @@ import {
   HelperText, 
   ChildrenContainer, 
   ErrorHelper, 
-  BlockWrapper,
   OptionsContainer,
   OptionLabel,
   SeparateBlockWrapper
@@ -41,6 +40,12 @@ const RadioPreview: React.FC<Props> = ({
     });
   };
 
+  // Collect all separate block children from selected option
+  const selectedOptionId = selectedOptions[field.id];
+  const selectedOption = field.options?.find(opt => opt.id === selectedOptionId);
+  const sortedChildren = selectedOption?.children ? sortFieldsByOrder(selectedOption.children) : [];
+  const allSeparateChildren = sortedChildren.filter(c => c.separateBlock);
+
   return (
     <>
       <OptionsContainer $placement={field.optionsPlacement || "column"}>
@@ -48,62 +53,58 @@ const RadioPreview: React.FC<Props> = ({
           const isSelected = selectedOptions[field.id] === opt.id;
           const sortedChildren = opt.children ? sortFieldsByOrder(opt.children) : [];
           
-          // Separate children into inline and separate block
+          // Only inline children
           const inlineChildren = sortedChildren.filter(c => !c.separateBlock);
-          const separateChildren = sortedChildren.filter(c => c.separateBlock);
 
           return (
-            <React.Fragment key={opt.id}>
-              <div>
-                <OptionLabel $placement={field.optionsPlacement}>
-                  <input
-                    type="radio"
-                    name={field.id}
-                    value={opt.key}
-                    checked={isSelected}
-                    onChange={() => {
-                      dispatch(setSelectedOption({ fieldId: field.id, optionId: opt.id }));
-                      dispatch(setClearedField({ fieldId: field.id }));
-                    }}
-                  />
-                  {opt.label}
-                </OptionLabel>
+            <div key={opt.id}>
+              <OptionLabel $placement={field.optionsPlacement}>
+                <input
+                  type="radio"
+                  name={field.id}
+                  value={opt.key}
+                  checked={isSelected}
+                  onChange={() => {
+                    dispatch(setSelectedOption({ fieldId: field.id, optionId: opt.id }));
+                    dispatch(setClearedField({ fieldId: field.id }));
+                  }}
+                />
+                {opt.label}
+              </OptionLabel>
 
-                {opt.helperText && level === 0 && <HelperText>{opt.helperText}</HelperText>}
+              {opt.helperText && level === 0 && <HelperText>{opt.helperText}</HelperText>}
 
-                {/* Render inline children */}
-                {!renderChildrenInParent && isSelected && inlineChildren.length > 0 && (
-                  <ChildrenContainer $placement={opt.placement || "column"}>
-                    {inlineChildren.map((child) => (
-                      <BlockWrapper key={child.id} $level={level + 1}>
-                        <PreviewRenderer
-                          field={child}
-                          block={block}
-                          level={level + 1}
-                          parentSelected={true}
-                        />
-                      </BlockWrapper>
-                    ))}
-                  </ChildrenContainer>
-                )}
-              </div>
-              
-              {/* Render separate block children OUTSIDE */}
-              {!renderChildrenInParent && isSelected && separateChildren.map((child) => (
-                <SeparateBlockWrapper key={child.id}>
-                  <PreviewRenderer
-                    field={child}
-                    block={block}
-                    level={level + 1}
-                    parentSelected={true}
-                  />
-                </SeparateBlockWrapper>
-              ))}
-            </React.Fragment>
+              {/* Render inline children */}
+              {!renderChildrenInParent && isSelected && inlineChildren.length > 0 && (
+                <ChildrenContainer $placement={opt.placement || "column"}>
+                  {inlineChildren.map((child) => (
+                    <PreviewRenderer
+                      key={child.id}
+                      field={child}
+                      block={block}
+                      level={level + 1}
+                      parentSelected={true}
+                    />
+                  ))}
+                </ChildrenContainer>
+              )}
+            </div>
           );
         })}
       </OptionsContainer>
       {error && <ErrorHelper>{error}</ErrorHelper>}
+      
+      {/* Render all separate block children AFTER all options */}
+      {!renderChildrenInParent && allSeparateChildren.map((child) => (
+        <SeparateBlockWrapper key={child.id}>
+          <PreviewRenderer
+            field={child}
+            block={block}
+            level={level + 1}
+            parentSelected={true}
+          />
+        </SeparateBlockWrapper>
+      ))}
     </>
   );
 };

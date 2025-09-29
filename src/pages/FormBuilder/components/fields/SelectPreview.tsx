@@ -4,7 +4,7 @@ import type { RootState } from "../../../../store";
 import { setFieldValue, setClearedField } from "../../../../store/slices/formSlice";
 import type { Field, Block } from "../../../../types";
 import PreviewRenderer from "../PreviewRenderer";
-import { ChildrenContainer, ErrorHelper, BlockWrapper } from "../../../../assets/Components.styled";
+import { ChildrenContainer, ErrorHelper, SeparateBlockWrapper } from "../../../../assets/Components.styled";
 
 interface Props {
   field: Field;
@@ -36,6 +36,10 @@ const SelectPreview: React.FC<Props> = ({
   };
 
   const sortedChildren = selectedOpt?.children ? sortFieldsByOrder(selectedOpt.children) : [];
+  
+  // Separate children into inline and separate block
+  const inlineChildren = sortedChildren.filter(c => !c.separateBlock);
+  const separateChildren = sortedChildren.filter(c => c.separateBlock);
 
   return (
     <>
@@ -56,21 +60,32 @@ const SelectPreview: React.FC<Props> = ({
 
       {error && <ErrorHelper>{error}</ErrorHelper>}
 
-      {/* Only render children inline if renderChildrenInParent is FALSE */}
-      {!renderChildrenInParent && value && sortedChildren.length > 0 && (
+      {/* Render inline children first */}
+      {!renderChildrenInParent && value && inlineChildren.length > 0 && (
         <ChildrenContainer $placement={selectedOpt?.placement || "column"}>
-          {sortedChildren.map((child) => (
-            <BlockWrapper key={child.id} $level={level + 1}>
-              <PreviewRenderer
-                field={child}
-                block={block}
-                level={level + 1}
-                parentSelected={!!value}
-              />
-            </BlockWrapper>
+          {inlineChildren.map((child) => (
+            <PreviewRenderer
+              key={child.id}
+              field={child}
+              block={block}
+              level={level + 1}
+              parentSelected={!!value}
+            />
           ))}
         </ChildrenContainer>
       )}
+
+      {/* Render separate block children AFTER inline children */}
+      {!renderChildrenInParent && value && separateChildren.map((child) => (
+        <SeparateBlockWrapper key={child.id}>
+          <PreviewRenderer
+            field={child}
+            block={block}
+            level={level + 1}
+            parentSelected={!!value}
+          />
+        </SeparateBlockWrapper>
+      ))}
     </>
   );
 };

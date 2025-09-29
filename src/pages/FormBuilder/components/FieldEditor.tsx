@@ -24,9 +24,13 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block }) => {
     dispatch(setBlock(updatedBlock));
   };
 
+  const handleFieldSeparateBlock = (value: boolean) => {
+    onChange({ ...field, separateBlock: value });
+  };
+
   return (
     <FieldContainer $level={level}>
-      {/* Only top-level: Block configuration */}
+      {/* Top-level: Block configuration */}
       {level === 0 && (
         <>
           <label>
@@ -47,6 +51,18 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block }) => {
             Display Ordering?
           </label>
         </>
+      )}
+
+      {/* Nested levels: Field separate block configuration */}
+      {level > 0 && (
+        <label>
+          <CheckboxInput
+            type="checkbox"
+            checked={field.separateBlock || false}
+            onChange={(e) => handleFieldSeparateBlock(e.target.checked)}
+          />
+          Render as Separate Block?
+        </label>
       )}
 
       {/* Basic field configuration */}

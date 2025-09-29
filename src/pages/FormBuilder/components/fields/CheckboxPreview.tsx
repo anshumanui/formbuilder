@@ -9,7 +9,7 @@ import {
   ChildrenContainer,
   OptionsContainer,
   OptionLabel,
-  BlockWrapper
+  SeparateBlockWrapper
 } from "../../../../assets/Components.styled";
 
 interface Props {
@@ -39,12 +39,25 @@ const CheckboxPreview: React.FC<Props> = ({
     });
   };
 
+  // Collect all separate block children from ALL checked options
+  const allSeparateChildren: Field[] = [];
+  (field.options || []).forEach((opt) => {
+    if (checkedOptions[opt.id]) {
+      const sortedChildren = opt.children ? sortFieldsByOrder(opt.children) : [];
+      const separateChildren = sortedChildren.filter(c => c.separateBlock);
+      allSeparateChildren.push(...separateChildren);
+    }
+  });
+
   return (
     <>
       <OptionsContainer $placement={field.optionsPlacement || "column"}>
         {(field.options || []).map((opt) => {
           const isChecked = !!checkedOptions[opt.id];
           const sortedChildren = opt.children ? sortFieldsByOrder(opt.children) : [];
+          
+          // Only inline children
+          const inlineChildren = sortedChildren.filter(c => !c.separateBlock);
 
           return (
             <div key={opt.id}>
@@ -62,18 +75,17 @@ const CheckboxPreview: React.FC<Props> = ({
                 {opt.label}
               </OptionLabel>
 
-              {/* Only render children inline if renderChildrenInParent is FALSE */}
-              {!renderChildrenInParent && isChecked && sortedChildren.length > 0 && (
+              {/* Render inline children */}
+              {!renderChildrenInParent && isChecked && inlineChildren.length > 0 && (
                 <ChildrenContainer $placement={opt.placement || "column"}>
-                  {sortedChildren.map((child) => (
-                    <BlockWrapper key={child.id} $level={level + 1}>
-                      <PreviewRenderer
-                        field={child}
-                        block={block}
-                        level={level + 1}
-                        parentSelected={isChecked}
-                      />
-                    </BlockWrapper>
+                  {inlineChildren.map((child) => (
+                    <PreviewRenderer
+                      key={child.id}
+                      field={child}
+                      block={block}
+                      level={level + 1}
+                      parentSelected={isChecked}
+                    />
                   ))}
                 </ChildrenContainer>
               )}
@@ -82,6 +94,18 @@ const CheckboxPreview: React.FC<Props> = ({
         })}
       </OptionsContainer>
       {error && <ErrorHelper>{error}</ErrorHelper>}
+      
+      {/* Render all separate block children AFTER all options */}
+      {!renderChildrenInParent && allSeparateChildren.map((child) => (
+        <SeparateBlockWrapper key={child.id}>
+          <PreviewRenderer
+            field={child}
+            block={block}
+            level={level + 1}
+            parentSelected={true}
+          />
+        </SeparateBlockWrapper>
+      ))}
     </>
   );
 };

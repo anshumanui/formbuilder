@@ -7,13 +7,13 @@ import PreviewRenderer from "../PreviewRenderer";
 import { 
   ChildrenContainer, 
   ErrorHelper, 
-  BlockWrapper,
   MultiSelectContainer,
   MultiSelectLabel,
   MultiSelectCounter,
   MultiSelectInput,
   MultiSelectChildrenContainer,
-  MultiSelectChildTitle
+  MultiSelectChildTitle,
+  SeparateBlockWrapper
 } from "../../../../assets/Components.styled";
 
 interface Props {
@@ -75,6 +75,21 @@ const MultiSelectPreview: React.FC<Props> = ({
     selectedValues.includes(opt.key)
   );
 
+  // Collect all inline and separate block children
+  const allInlineChildren: Array<{ opt: any; children: Field[] }> = [];
+  const allSeparateChildren: Field[] = [];
+
+  selectedOptionsForChildren.forEach((selectedOpt) => {
+    const sortedChildren = selectedOpt.children ? sortFieldsByOrder(selectedOpt.children) : [];
+    const inlineChildren = sortedChildren.filter(c => !c.separateBlock);
+    const separateChildren = sortedChildren.filter(c => c.separateBlock);
+    
+    if (inlineChildren.length > 0) {
+      allInlineChildren.push({ opt: selectedOpt, children: inlineChildren });
+    }
+    allSeparateChildren.push(...separateChildren);
+  });
+
   return (
     <>
       <MultiSelectContainer>
@@ -109,36 +124,41 @@ const MultiSelectPreview: React.FC<Props> = ({
 
       {error && <ErrorHelper>{error}</ErrorHelper>}
 
-      {/* Only render children inline if renderChildrenInParent is FALSE */}
-      {!renderChildrenInParent && selectedOptionsForChildren.length > 0 && (
+      {/* Render all inline children first */}
+      {!renderChildrenInParent && allInlineChildren.length > 0 && (
         <ChildrenContainer $placement="column">
-          {selectedOptionsForChildren.map((selectedOpt) => {
-            const sortedChildren = selectedOpt.children ? sortFieldsByOrder(selectedOpt.children) : [];
-            
-            return (
-              sortedChildren.length > 0 && (
-                <MultiSelectChildrenContainer key={selectedOpt.id}>
-                  <MultiSelectChildTitle>
-                    {selectedOpt.label} Options:
-                  </MultiSelectChildTitle>
-                  <ChildrenContainer $placement={selectedOpt.placement || "column"}>
-                    {sortedChildren.map((child) => (
-                      <BlockWrapper key={child.id} $level={level + 1}>
-                        <PreviewRenderer
-                          field={child}
-                          block={block}
-                          level={level + 1}
-                          parentSelected={parentSelected && selectedValues.length > 0}
-                        />
-                      </BlockWrapper>
-                    ))}
-                  </ChildrenContainer>
-                </MultiSelectChildrenContainer>
-              )
-            );
-          })}
+          {allInlineChildren.map(({ opt, children }) => (
+            <MultiSelectChildrenContainer key={opt.id}>
+              <MultiSelectChildTitle>
+                {opt.label} Options:
+              </MultiSelectChildTitle>
+              <ChildrenContainer $placement={opt.placement || "column"}>
+                {children.map((child) => (
+                  <PreviewRenderer
+                    key={child.id}
+                    field={child}
+                    block={block}
+                    level={level + 1}
+                    parentSelected={parentSelected && selectedValues.length > 0}
+                  />
+                ))}
+              </ChildrenContainer>
+            </MultiSelectChildrenContainer>
+          ))}
         </ChildrenContainer>
       )}
+
+      {/* Render all separate block children AFTER all inline children */}
+      {!renderChildrenInParent && allSeparateChildren.map((child) => (
+        <SeparateBlockWrapper key={child.id}>
+          <PreviewRenderer
+            field={child}
+            block={block}
+            level={level + 1}
+            parentSelected={parentSelected && selectedValues.length > 0}
+          />
+        </SeparateBlockWrapper>
+      ))}
     </>
   );
 };

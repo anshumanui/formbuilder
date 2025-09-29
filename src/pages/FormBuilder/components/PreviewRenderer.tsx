@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from "../../../store";
 import type { Field, Block } from "../../../types";
 import { getErrorForField } from "../../../utils/helpers";
-import { BlockWrapper, PreviewLabel } from "../../../assets/Components.styled";
+import { BlockWrapper, PreviewLabel, SeparateBlockWrapper } from "../../../assets/Components.styled";
 
 import TextFieldPreview from "./fields/TextFieldPreview";
 import TextareaPreview from "./fields/TextareaPreview";
@@ -88,6 +88,10 @@ const PreviewRenderer: React.FC<Props> = ({
 
   const topLevelChildren = getTopLevelChildren();
   
+  // Separate inline and separate block children
+  const inlineChildren = topLevelChildren.filter(c => !c.separateBlock);
+  const separateChildren = topLevelChildren.filter(c => c.separateBlock);
+  
   const commonProps = {
     field,
     block,
@@ -124,13 +128,17 @@ const PreviewRenderer: React.FC<Props> = ({
     }
   };
 
+  // Determine wrapper based on level and separateBlock
+  const Wrapper = (level === 0 || field.separateBlock) ? BlockWrapper : React.Fragment;
+  const wrapperProps = Wrapper === BlockWrapper ? {
+    $level: level,
+    $blockElement: field.blockElement,
+    $separate: level === 0 ? block.separateBlock : false
+  } : {};
+
   return (
     <>
-      <BlockWrapper 
-        $level={level} 
-        $blockElement={field.blockElement}
-        $separate={level === 0 && block.separateBlock}
-      >
+      <Wrapper {...wrapperProps}>
         {field.label && (
           <PreviewLabel>
             {block.displayOrdering && typeof field.order === "number" && `${field.order}. `}
@@ -139,12 +147,12 @@ const PreviewRenderer: React.FC<Props> = ({
         )}
 
         {renderFieldByType()}
-      </BlockWrapper>
+      </Wrapper>
 
-      {/* Render top-level children separately if separateBlock is true */}
-      {level === 0 && block.separateBlock && topLevelChildren.length > 0 && (
-        <BlockWrapper $level={level + 1} $separate>
-          {topLevelChildren.map((child) => (
+      {/* Render top-level inline children if separateBlock is true */}
+      {level === 0 && block.separateBlock && inlineChildren.length > 0 && (
+        <BlockWrapper $level={level + 1} $separate={false}>
+          {inlineChildren.map((child) => (
             <PreviewRenderer
               key={child.id}
               field={child}
@@ -155,6 +163,18 @@ const PreviewRenderer: React.FC<Props> = ({
           ))}
         </BlockWrapper>
       )}
+
+      {/* Render top-level separate block children */}
+      {level === 0 && block.separateBlock && separateChildren.map((child) => (
+        <SeparateBlockWrapper key={child.id}>
+          <PreviewRenderer
+            field={child}
+            block={block}
+            level={level + 1}
+            parentSelected={true}
+          />
+        </SeparateBlockWrapper>
+      ))}
     </>
   );
 };
