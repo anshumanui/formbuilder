@@ -8,6 +8,8 @@ import OptionsConfig from "./OptionsConfig";
 import {
   FieldContainer,
   CheckboxInput,
+  InputLabel,
+  TextInput,
 } from "../../../assets/Components.styled";
 
 interface Props {
@@ -41,6 +43,17 @@ const FieldEditor: React.FC<Props> = ({ field, onChange, level, block }) => {
             />
             Render as Separate Block?
           </label>
+
+          {block.separateBlock && (
+            <>
+              <InputLabel>Block Label (optional)</InputLabel>
+              <TextInput
+                value={block.blockLabel || ""}
+                onChange={(e) => handleBlockChange({ ...block, blockLabel: e.target.value })}
+                placeholder="Enter label for children block"
+              />
+            </>
+          )}
 
           <label>
             <CheckboxInput

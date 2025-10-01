@@ -58,12 +58,19 @@ export const cleanBlockForExport = (block: Block): any => {
     return cleaned;
   };
 
-  return {
+  const exportBlock: any = {
     id: block.id,
     separateBlock: block.separateBlock || false,
     displayOrdering: block.displayOrdering || false,
     field: cleanField(block.field),
   };
+  
+  // Add blockLabel only if it exists
+  if (block.blockLabel) {
+    exportBlock.blockLabel = block.blockLabel;
+  }
+  
+  return exportBlock;
 };
 
 export const getErrorForField = (

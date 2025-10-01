@@ -35,4 +35,5 @@ export interface Block {
   field: Field;
   separateBlock?: boolean;
   displayOrdering?: boolean;
+  blockLabel?: string;
 }

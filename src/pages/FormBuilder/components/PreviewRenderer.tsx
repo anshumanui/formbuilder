@@ -152,6 +152,11 @@ const PreviewRenderer: React.FC<Props> = ({
       {/* Render top-level inline children if separateBlock is true */}
       {level === 0 && block.separateBlock && inlineChildren.length > 0 && (
         <BlockWrapper $level={level + 1} $separate={true}>
+          {block.blockLabel && (
+            <PreviewLabel style={{ fontSize: '16px', marginBottom: '12px' }}>
+              {block.blockLabel}
+            </PreviewLabel>
+          )}
           {inlineChildren.map((child) => (
             <FieldWrapper key={child.id} $blockElement={child.blockElement}>
               <PreviewRenderer
