@@ -4,7 +4,7 @@ import type { RootState } from "../../../../store";
 import { setFieldValue, setClearedField } from "../../../../store/slices/formSlice";
 import type { Field, Block } from "../../../../types";
 import PreviewRenderer from "../PreviewRenderer";
-import { ChildrenContainer, ErrorHelper, SeparateBlockWrapper } from "../../../../assets/Components.styled";
+import { ChildrenContainer, ErrorHelper, FieldWrapper, SeparateBlockWrapper } from "../../../../assets/Components.styled";
 
 interface Props {
   field: Field;
@@ -64,13 +64,14 @@ const SelectPreview: React.FC<Props> = ({
       {!renderChildrenInParent && value && inlineChildren.length > 0 && (
         <ChildrenContainer $placement={selectedOpt?.placement || "column"}>
           {inlineChildren.map((child) => (
-            <PreviewRenderer
-              key={child.id}
-              field={child}
-              block={block}
-              level={level + 1}
-              parentSelected={!!value}
-            />
+            <FieldWrapper key={child.id} $blockElement={child.blockElement}>
+              <PreviewRenderer
+                field={child}
+                block={block}
+                level={level + 1}
+                parentSelected={!!value}
+              />
+            </FieldWrapper>
           ))}
         </ChildrenContainer>
       )}

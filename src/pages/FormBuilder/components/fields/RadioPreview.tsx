@@ -10,7 +10,8 @@ import {
   ErrorHelper, 
   OptionsContainer,
   OptionLabel,
-  SeparateBlockWrapper
+  SeparateBlockWrapper,
+  FieldWrapper
 } from "../../../../assets/Components.styled";
 
 interface Props {
@@ -78,13 +79,14 @@ const RadioPreview: React.FC<Props> = ({
               {!renderChildrenInParent && isSelected && inlineChildren.length > 0 && (
                 <ChildrenContainer $placement={opt.placement || "column"}>
                   {inlineChildren.map((child) => (
-                    <PreviewRenderer
-                      key={child.id}
-                      field={child}
-                      block={block}
-                      level={level + 1}
-                      parentSelected={true}
-                    />
+                    <FieldWrapper key={child.id} $blockElement={child.blockElement}>
+                      <PreviewRenderer
+                        field={child}
+                        block={block}
+                        level={level + 1}
+                        parentSelected={true}
+                      />
+                    </FieldWrapper>
                   ))}
                 </ChildrenContainer>
               )}

@@ -9,7 +9,8 @@ import {
   ChildrenContainer,
   OptionsContainer,
   OptionLabel,
-  SeparateBlockWrapper
+  SeparateBlockWrapper,
+  FieldWrapper
 } from "../../../../assets/Components.styled";
 
 interface Props {
@@ -79,13 +80,15 @@ const CheckboxPreview: React.FC<Props> = ({
               {!renderChildrenInParent && isChecked && inlineChildren.length > 0 && (
                 <ChildrenContainer $placement={opt.placement || "column"}>
                   {inlineChildren.map((child) => (
-                    <PreviewRenderer
-                      key={child.id}
-                      field={child}
-                      block={block}
-                      level={level + 1}
-                      parentSelected={isChecked}
-                    />
+                    <FieldWrapper key={child.id} $blockElement={child.blockElement}>
+                      <PreviewRenderer
+                        key={child.id}
+                        field={child}
+                        block={block}
+                        level={level + 1}
+                        parentSelected={isChecked}
+                      />
+                    </FieldWrapper>
                   ))}
                 </ChildrenContainer>
               )}

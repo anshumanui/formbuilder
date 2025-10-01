@@ -24,23 +24,25 @@ const NumericFieldPreview: React.FC<Props> = ({ field, error }) => {
   };
 
   return (
-    <FlexRow>
-      {field.icon && field.iconAlignment === "left" && <SmallIcon>{field.icon}</SmallIcon>}
-      <input
-        inputMode="decimal"
-        placeholder={field.placeholder}
-        value={value}
-        onChange={(e) => {
-          const newValue = e.target.value;
-          if (regexMap[dp].test(newValue)) {
-            dispatch(setFieldValue({ fieldId: field.id, value: newValue }));
-            dispatch(setClearedField({ fieldId: field.id }));
-          }
-        }}
-      />
-      {field.icon && field.iconAlignment === "right" && <SmallIcon>{field.icon}</SmallIcon>}
+    <>
+      <FlexRow>
+        {field.icon && field.iconAlignment === "left" && <SmallIcon>{field.icon}</SmallIcon>}
+        <input
+          inputMode="decimal"
+          placeholder={field.placeholder}
+          value={value}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            if (regexMap[dp].test(newValue)) {
+              dispatch(setFieldValue({ fieldId: field.id, value: newValue }));
+              dispatch(setClearedField({ fieldId: field.id }));
+            }
+          }}
+        />
+        {field.icon && field.iconAlignment === "right" && <SmallIcon>{field.icon}</SmallIcon>}
+      </FlexRow>
       {error && <ErrorHelper>{error}</ErrorHelper>}
-    </FlexRow>
+    </>
   );
 };
 

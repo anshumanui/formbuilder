@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from "../../../store";
 import type { Field, Block } from "../../../types";
 import { getErrorForField } from "../../../utils/helpers";
-import { BlockWrapper, PreviewLabel, SeparateBlockWrapper } from "../../../assets/Components.styled";
+import { BlockWrapper, FieldWrapper, PreviewLabel, SeparateBlockWrapper } from "../../../assets/Components.styled";
 
 import TextFieldPreview from "./fields/TextFieldPreview";
 import TextareaPreview from "./fields/TextareaPreview";
@@ -153,13 +153,15 @@ const PreviewRenderer: React.FC<Props> = ({
       {level === 0 && block.separateBlock && inlineChildren.length > 0 && (
         <BlockWrapper $level={level + 1} $separate={false}>
           {inlineChildren.map((child) => (
-            <PreviewRenderer
-              key={child.id}
-              field={child}
-              block={block}
-              level={level + 1}
-              parentSelected={true}
-            />
+            <FieldWrapper key={child.id} $blockElement={child.blockElement}>
+              <PreviewRenderer
+                key={child.id}
+                field={child}
+                block={block}
+                level={level + 1}
+                parentSelected={true}
+              />
+            </FieldWrapper>
           ))}
         </BlockWrapper>
       )}

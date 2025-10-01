@@ -13,7 +13,8 @@ import {
   MultiSelectInput,
   MultiSelectChildrenContainer,
   MultiSelectChildTitle,
-  SeparateBlockWrapper
+  SeparateBlockWrapper,
+  FieldWrapper
 } from "../../../../assets/Components.styled";
 
 interface Props {
@@ -134,13 +135,14 @@ const MultiSelectPreview: React.FC<Props> = ({
               </MultiSelectChildTitle>
               <ChildrenContainer $placement={opt.placement || "column"}>
                 {children.map((child) => (
-                  <PreviewRenderer
-                    key={child.id}
-                    field={child}
-                    block={block}
-                    level={level + 1}
-                    parentSelected={parentSelected && selectedValues.length > 0}
-                  />
+                  <FieldWrapper key={child.id} $blockElement={child.blockElement}>
+                    <PreviewRenderer
+                      field={child}
+                      block={block}
+                      level={level + 1}
+                      parentSelected={parentSelected && selectedValues.length > 0}
+                    />
+                  </FieldWrapper>
                 ))}
               </ChildrenContainer>
             </MultiSelectChildrenContainer>

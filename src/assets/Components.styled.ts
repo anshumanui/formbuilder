@@ -150,6 +150,19 @@ export const ChildrenContainer = styled.div<{ $placement: "row" | "column" }>`
   margin-top: 8px;
 `;
 
+// Add this new component after ChildrenContainer
+export const FieldWrapper = styled.div<{ $blockElement?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  ${(p) => p.$blockElement ? css`
+    flex: 1 1 100%;
+    width: 100%;
+  ` : css`
+    flex: 0 1 auto;
+    min-width: 200px;
+  `}
+`;
+
 // Options Container for radio/checkbox layout
 export const OptionsContainer = styled.div<{ $placement: "row" | "column" }>`
   display: flex;
