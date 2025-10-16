@@ -262,8 +262,10 @@ export const mapUserResponseToFormState = (
     if (!response) return;
 
     if (field.type === "radio") {
+      const radioResponse = response[field.key] || response;
+      
       field.options?.forEach(option => {
-        const optionResponse = response[option.key];
+        const optionResponse = radioResponse[option.key];
         
         // Handle both boolean value and object with selected property
         const isSelected = typeof optionResponse === 'boolean' 
