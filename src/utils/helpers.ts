@@ -65,7 +65,6 @@ export const cleanBlockForExport = (block: Block): any => {
     field: cleanField(block.field),
   };
   
-  // Add blockLabel only if it exists
   if (block.blockLabel) {
     exportBlock.blockLabel = block.blockLabel;
   }
@@ -117,7 +116,9 @@ export const getErrorForField = (
   }
 };
 
-// UPDATED: Generate user response JSON with ALL fields and options
+// UPDATED: Generate user response JSON with simplified structure
+// - Options WITHOUT children: direct boolean value
+// - Options WITH children: object with "selected" property + child values
 export const generateUserResponseJSON = (
   block: Block,
   selectedOptions: Record<string, string>,
@@ -132,19 +133,21 @@ export const generateUserResponseJSON = (
     if (field.type === "radio") {
       const selectedOptionId = selectedOptions[field.id];
       
-      // Include ALL options with selected: true/false
       field.options?.forEach(option => {
         const isSelected = option.id === selectedOptionId;
-        response[option.key] = { selected: isSelected };
+        const hasChildren = option.children && option.children.length > 0;
         
-        // Process children for selected option
-        if (option.children && option.children.length > 0) {
-          option.children.forEach(child => {
+        if (hasChildren) {
+          response[option.key] = { selected: isSelected };
+          
+          option.children?.forEach(child => {
             const childResponse = buildFieldResponse(child);
             if (Object.keys(childResponse).length > 0) {
               Object.assign(response[option.key], childResponse);
             }
           });
+        } else {
+          response[option.key] = isSelected;
         }
       });
     }
@@ -152,19 +155,21 @@ export const generateUserResponseJSON = (
     else if (field.type === "checkbox") {
       const checkboxResponse: any = {};
       
-      // Include ALL options with selected: true/false
       field.options?.forEach(option => {
         const isChecked = checkedOptions[option.id] || false;
-        checkboxResponse[option.key] = { selected: isChecked };
+        const hasChildren = option.children && option.children.length > 0;
         
-        // Process children for checked option
-        if (option.children && option.children.length > 0) {
-          option.children.forEach(child => {
+        if (hasChildren) {
+          checkboxResponse[option.key] = { selected: isChecked };
+          
+          option.children?.forEach(child => {
             const childResponse = buildFieldResponse(child);
             if (Object.keys(childResponse).length > 0) {
               Object.assign(checkboxResponse[option.key], childResponse);
             }
           });
+        } else {
+          checkboxResponse[option.key] = isChecked;
         }
       });
       
@@ -176,19 +181,21 @@ export const generateUserResponseJSON = (
     else if (field.type === "select") {
       const selectedValue = fieldValues[field.id];
       
-      // Include ALL options with selected: true/false
       field.options?.forEach(option => {
         const isSelected = option.key === selectedValue;
-        response[option.key] = { selected: isSelected };
+        const hasChildren = option.children && option.children.length > 0;
         
-        // Process children for selected option
-        if (option.children && option.children.length > 0) {
-          option.children.forEach(child => {
+        if (hasChildren) {
+          response[option.key] = { selected: isSelected };
+          
+          option.children?.forEach(child => {
             const childResponse = buildFieldResponse(child);
             if (Object.keys(childResponse).length > 0) {
               Object.assign(response[option.key], childResponse);
             }
           });
+        } else {
+          response[option.key] = isSelected;
         }
       });
     }
@@ -197,19 +204,21 @@ export const generateUserResponseJSON = (
       const selectedValues = multiSelectValues[field.id] || [];
       const multiselectResponse: any = {};
       
-      // Include ALL options with selected: true/false
       field.options?.forEach(option => {
         const isSelected = selectedValues.includes(option.key);
-        multiselectResponse[option.key] = { selected: isSelected };
+        const hasChildren = option.children && option.children.length > 0;
         
-        // Process children for selected option
-        if (option.children && option.children.length > 0) {
-          option.children.forEach(child => {
+        if (hasChildren) {
+          multiselectResponse[option.key] = { selected: isSelected };
+          
+          option.children?.forEach(child => {
             const childResponse = buildFieldResponse(child);
             if (Object.keys(childResponse).length > 0) {
               Object.assign(multiselectResponse[option.key], childResponse);
             }
           });
+        } else {
+          multiselectResponse[option.key] = isSelected;
         }
       });
       
@@ -218,7 +227,6 @@ export const generateUserResponseJSON = (
       }
     }
     
-    // UPDATED: Input fields - show key with value or empty string
     else if (field.type === "text" || field.type === "textarea" || field.type === "numeric") {
       const value = fieldValues[field.id];
       response[field.key] = value && value.trim() !== "" ? value : "";
@@ -234,6 +242,8 @@ export const generateUserResponseJSON = (
   };
 };
 
+// UPDATED: Map user response to form state
+// Handles both old format (always objects with "selected") and new format (boolean or object)
 export const mapUserResponseToFormState = (
   block: Block,
   userResponse: any
@@ -254,10 +264,16 @@ export const mapUserResponseToFormState = (
     if (field.type === "radio") {
       field.options?.forEach(option => {
         const optionResponse = response[option.key];
-        if (optionResponse && optionResponse.selected) {
+        
+        // Handle both boolean value and object with selected property
+        const isSelected = typeof optionResponse === 'boolean' 
+          ? optionResponse 
+          : (optionResponse && optionResponse.selected);
+        
+        if (isSelected) {
           selectedOptions[field.id] = option.id;
           
-          if (option.children) {
+          if (option.children && typeof optionResponse === 'object') {
             option.children.forEach(child => {
               processFieldResponse(child, optionResponse);
             });
@@ -271,10 +287,16 @@ export const mapUserResponseToFormState = (
       if (checkboxResponse) {
         field.options?.forEach(option => {
           const optionResponse = checkboxResponse[option.key];
-          if (optionResponse && optionResponse.selected) {
+          
+          // Handle both boolean value and object with selected property
+          const isChecked = typeof optionResponse === 'boolean' 
+            ? optionResponse 
+            : (optionResponse && optionResponse.selected);
+          
+          if (isChecked) {
             checkedOptions[option.id] = true;
             
-            if (option.children) {
+            if (option.children && typeof optionResponse === 'object') {
               option.children.forEach(child => {
                 processFieldResponse(child, optionResponse);
               });
@@ -287,10 +309,16 @@ export const mapUserResponseToFormState = (
     else if (field.type === "select") {
       field.options?.forEach(option => {
         const optionResponse = response[option.key];
-        if (optionResponse && optionResponse.selected) {
+        
+        // Handle both boolean value and object with selected property
+        const isSelected = typeof optionResponse === 'boolean' 
+          ? optionResponse 
+          : (optionResponse && optionResponse.selected);
+        
+        if (isSelected) {
           fieldValues[field.id] = option.key;
           
-          if (option.children) {
+          if (option.children && typeof optionResponse === 'object') {
             option.children.forEach(child => {
               processFieldResponse(child, optionResponse);
             });
@@ -306,10 +334,16 @@ export const mapUserResponseToFormState = (
         
         field.options?.forEach(option => {
           const optionResponse = multiselectResponse[option.key];
-          if (optionResponse && optionResponse.selected) {
+          
+          // Handle both boolean value and object with selected property
+          const isSelected = typeof optionResponse === 'boolean' 
+            ? optionResponse 
+            : (optionResponse && optionResponse.selected);
+          
+          if (isSelected) {
             selectedKeys.push(option.key);
             
-            if (option.children) {
+            if (option.children && typeof optionResponse === 'object') {
               option.children.forEach(child => {
                 processFieldResponse(child, optionResponse);
               });
