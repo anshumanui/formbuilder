@@ -1,3 +1,4 @@
+// src/pages/FormBuilder/components/fields/RadioPreview.tsx (Updated)
 import React from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from "../../../../store";
@@ -13,6 +14,17 @@ import {
   SeparateBlockWrapper,
   FieldWrapper
 } from "../../../../assets/Components.styled";
+import styled from "styled-components";
+
+const SharedChildIndicator = styled.div`
+  background: #e3f2fd;
+  border-left: 3px solid #2196f3;
+  padding: 8px 12px;
+  margin: 8px 0;
+  font-size: 12px;
+  color: #1565c0;
+  border-radius: 2px;
+`;
 
 interface Props {
   field: Field;
@@ -40,6 +52,24 @@ const RadioPreview: React.FC<Props> = ({
       return orderA - orderB;
     });
   };
+
+  // Detect shared children (same child ID across multiple options)
+  const getSharedChildIds = (): Set<string> => {
+    const childIdMap: Record<string, number> = {};
+    (field.options || []).forEach((opt) => {
+      (opt.children || []).forEach((child) => {
+        childIdMap[child.id] = (childIdMap[child.id] || 0) + 1;
+      });
+    });
+
+    return new Set(
+      Object.entries(childIdMap)
+        .filter(([, count]) => count > 1)
+        .map(([id]) => id)
+    );
+  };
+
+  const sharedChildIds = getSharedChildIds();
 
   // Collect all separate block children from selected option
   const selectedOptionId = selectedOptions[field.id];
@@ -80,6 +110,11 @@ const RadioPreview: React.FC<Props> = ({
                 <ChildrenContainer $placement={opt.placement || "column"}>
                   {inlineChildren.map((child) => (
                     <FieldWrapper key={child.id} $blockElement={child.blockElement}>
+                      {sharedChildIds.has(child.id) && (
+                        <SharedChildIndicator>
+                          🔗 This field is shared with other options. Changes will apply to all.
+                        </SharedChildIndicator>
+                      )}
                       <PreviewRenderer
                         field={child}
                         block={block}
@@ -99,6 +134,11 @@ const RadioPreview: React.FC<Props> = ({
       {/* Render all separate block children AFTER all options */}
       {!renderChildrenInParent && allSeparateChildren.map((child) => (
         <SeparateBlockWrapper key={child.id}>
+          {sharedChildIds.has(child.id) && (
+            <SharedChildIndicator>
+              🔗 This field is shared with other options. Changes will apply to all.
+            </SharedChildIndicator>
+          )}
           <PreviewRenderer
             field={child}
             block={block}
